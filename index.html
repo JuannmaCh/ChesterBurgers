@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chester Burger - Pedidos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="checkerboard" aria-hidden="true"></div>
+
+<header>
+    <div class="container">
+        <h1>Chester Burger</h1>
+        <span class="subtitle">Sabor Real en cada Mordida</span>
+    </div>
+</header>
+
+<main class="container">
+    <h2>Hamburguesas</h2>
+    <div id="burgers-list"></div>
+
+    <h2>Extras</h2>
+    <div id="extras-list"></div>
+
+    <h2>Gaseosas</h2>
+    <div id="drinks-list"></div>
+
+</main>
+
+<div class="cart-bar">
+    <div class="cart-bar-summary">
+        <span id="cart-count">0</span> item(s) - Total: <span id="total-price">$0</span>
+    </div>
+    <div class="cart-bar-actions">
+        <button class="btn-cart-toggle" id="cart-toggle-btn" type="button">VER CARRITO</button>
+        <button class="btn-order" id="order-btn" type="button">FINALIZAR COMPRA</button>
+    </div>
+</div>
+
+<section id="cart-drawer" class="cart-drawer" hidden aria-label="Detalle de carrito">
+    <div class="cart-drawer-header">
+        <h2 id="cart-title">Tu Pedido</h2>
+        <button id="close-cart-drawer-btn" class="btn-close" type="button" aria-label="Cerrar carrito">X</button>
+    </div>
+    <div class="cart-panel" id="cart-items" aria-live="polite"></div>
+    <div class="cart-drawer-subtotal">Subtotal: <span id="cart-drawer-subtotal">$0</span></div>
+    <div class="cart-actions">
+        <button class="btn-clear" id="clear-cart" type="button">Vaciar carrito</button>
+    </div>
+</section>
+
+<section id="checkout-modal" class="checkout-modal" hidden>
+    <div class="checkout-sheet" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+        <div class="checkout-header">
+            <h2 id="checkout-title">Datos de Entrega</h2>
+            <button id="close-checkout-btn" class="btn-close" type="button" aria-label="Cerrar formulario">X</button>
+        </div>
+
+        <label class="form-label" for="customer-name">Nombre</label>
+        <input id="customer-name" class="form-input" type="text" autocomplete="name" placeholder="Ej: Juan Perez">
+
+        <label class="form-label" for="customer-address">Direccion</label>
+        <input id="customer-address" class="form-input" type="text" autocomplete="street-address" placeholder="Ej: Av. Siempre Viva 123">
+
+        <label class="form-label" for="delivery-zone">Zona</label>
+        <select id="delivery-zone" class="form-select">
+            <option value="">Selecciona una zona</option>
+            <option value="centro">Centro</option>
+            <option value="norte">Zona Norte</option>
+            <option value="sur">Zona Sur</option>
+            <option value="retiro">Retiro en local</option>
+        </select>
+
+        <div class="checkout-totals" aria-live="polite">
+            <div>Subtotal: <span id="subtotal-price">$0</span></div>
+            <div>Envio: <span id="shipping-price">$0</span></div>
+            <div class="checkout-grand-total">Total final: <span id="grand-total-price">$0</span></div>
+        </div>
+
+        <div class="checkout-detail">
+            <h3>Detalle del pedido</h3>
+            <div id="checkout-detail-list" class="checkout-detail-list"></div>
+            <div class="checkout-detail-subtotal">Subtotal productos: <span id="checkout-detail-subtotal">$0</span></div>
+        </div>
+
+        <button id="submit-order-btn" class="btn-order btn-submit-order" type="button">ENVIAR A WHATSAPP</button>
+    </div>
+</section>
+
+<div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+<p id="a11y-live" class="sr-only" aria-live="polite"></p>
+
+<script src="app.js"></script>
+</body>
+</html>
