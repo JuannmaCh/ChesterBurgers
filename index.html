@@ -66,11 +66,12 @@
         <label class="form-label" for="delivery-zone">Zona</label>
         <select id="delivery-zone" class="form-select">
             <option value="">Selecciona una zona</option>
-            <option value="centro">Centro</option>
-            <option value="norte">Zona Norte</option>
-            <option value="sur">Zona Sur</option>
-            <option value="retiro">Retiro en local</option>
+            <option value="centro">Zona 1 (0 a 3 km) - $1000</option>
+            <option value="norte">Zona 2 (3 a 5 km) - $3000</option>
+            <option value="sur">Zona 3 (5 a 7 km) - $4000</option>
+            <option value="retiro">Retiro en local (sin costo)</option>
         </select>
+        <p id="pickup-address-note" class="form-label" hidden>Retiro en: Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina</p>
 
         <div class="checkout-totals" aria-live="polite">
             <div>Subtotal: <span id="subtotal-price">$0</span></div>

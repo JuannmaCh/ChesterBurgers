@@ -3,11 +3,12 @@ const CURRENCY = "ARS";
 const CART_STORAGE_KEY = "chester-cart-v1";
 const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const WHATSAPP_PHONE = "5491124031761";
+const PICKUP_ADDRESS = "Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina";
 
 const SHIPPING_ZONES = {
-    centro: { label: "Centro", price: 1800 },
-    norte: { label: "Zona Norte", price: 2500 },
-    sur: { label: "Zona Sur", price: 2500 },
+    centro: { label: "Zona 1 (0 a 3 km)", price: 1000 },
+    norte: { label: "Zona 2 (3 a 5 km)", price: 3000 },
+    sur: { label: "Zona 3 (5 a 7 km)", price: 4000 },
     retiro: { label: "Retiro en local", price: 0 }
 };
 
@@ -58,6 +59,7 @@ const checkoutDetailSubtotal = document.getElementById("checkout-detail-subtotal
 const customerNameInput = document.getElementById("customer-name");
 const customerAddressInput = document.getElementById("customer-address");
 const deliveryZoneSelect = document.getElementById("delivery-zone");
+const pickupAddressNote = document.getElementById("pickup-address-note");
 const checkoutModal = document.getElementById("checkout-modal");
 const closeCheckoutBtn = document.getElementById("close-checkout-btn");
 const submitOrderBtn = document.getElementById("submit-order-btn");
@@ -70,6 +72,7 @@ hydrateCustomerData();
 render();
 bindEvents();
 updateTotals();
+updateDeliveryModeUI();
 
 function bindEvents() {
     document.addEventListener("click", onDocumentClick);
@@ -88,6 +91,7 @@ function bindEvents() {
     deliveryZoneSelect.addEventListener("change", () => {
         saveCustomerData();
         updateTotals();
+        updateDeliveryModeUI();
     });
 }
 
@@ -347,12 +351,14 @@ function sendOrder() {
     const subtotal = getCartSubtotal();
     const shipping = zoneData.price;
     const total = subtotal + shipping;
+    const isPickup = zoneCode === "retiro";
+    const orderAddress = isPickup ? PICKUP_ADDRESS : customerAddressInput.value.trim();
 
     const lines = [
         "NUEVO PEDIDO - CHESTER BURGER",
         "",
         `Cliente: ${customerNameInput.value.trim()}`,
-        `Direccion: ${customerAddressInput.value.trim()}`,
+        `${isPickup ? "Retiro en" : "Direccion"}: ${orderAddress}`,
         `Zona: ${zoneData.label}`,
         ""
     ];
@@ -436,6 +442,10 @@ function validateCheckout() {
         showFeedback("Ingresa tu nombre para continuar");
         customerNameInput.focus();
         return false;
+    }
+
+    if (zone === "retiro") {
+        return true;
     }
 
     if (address.length < 5) {
@@ -527,3 +537,15 @@ function showFeedback(message) {
     }, 1500);
 }
 
+function updateDeliveryModeUI() {
+    const isPickup = deliveryZoneSelect.value === "retiro";
+
+    if (pickupAddressNote) {
+        pickupAddressNote.hidden = !isPickup;
+    }
+
+    customerAddressInput.disabled = isPickup;
+    customerAddressInput.placeholder = isPickup
+        ? "No hace falta direccion para retiro en local"
+        : "Ej: Av. Siempre Viva 123";
+}
