@@ -29,7 +29,7 @@ const menu = {
         { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, panceta, pepino y salsa chesty con pan de kalis" }
     ],
     extras: [
-        { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion grande" },
+        { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion grande", image: "papas_fritas.avif" },
         { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 10 unidades" }
     ],
     drinks: [
@@ -174,16 +174,20 @@ function renderBurgers() {
 }
 
 function renderSimple(list, container, label, type) {
-    container.innerHTML = list.map((item) => `
+    container.innerHTML = list.map((item) => {
+        const imgStyle = item.image ? ` style="background-image: url('${item.image}')"` : "";
+        return `
         <article class="item-card">
-            <div class="item-img" aria-hidden="true"></div>
+            <div class="item-img"${imgStyle} aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
+                ${item.desc ? `<p>${item.desc}</p>` : ""}
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
             <button class="btn-add" type="button" data-action="add-item" data-id="${item.id}" data-type="${type}" aria-label="Anadir ${item.name}">ANADIR</button>
         </article>
-    `).join("");
+    `;
+    }).join("");
 }
 
 function renderCart() {
