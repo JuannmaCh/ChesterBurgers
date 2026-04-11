@@ -162,6 +162,7 @@ function renderBurgers() {
             <div class="item-details">
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
+                <p class="quality-claim">Pan Kalis + medallon de carne 90gr</p>
                 <div class="options">
                     <label><input type="checkbox" id="notco-${item.id}"> NotCo</label>
                     <label><input type="checkbox" id="triple-${item.id}"> Triple (+${formatMoney(3000)})</label>

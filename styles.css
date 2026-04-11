@@ -132,6 +132,20 @@ h2 {
     margin: 6px 0;
 }
 
+.quality-claim {
+    display: inline-block;
+    margin: 2px 0 4px;
+    padding: 5px 8px;
+    border: 1px solid var(--red);
+    border-radius: 999px;
+    background: #fff8dc;
+    color: var(--red);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
 .options {
     font-family: Arial, sans-serif;
     font-size: 0.84rem;
