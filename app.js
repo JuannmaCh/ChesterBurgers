@@ -145,8 +145,13 @@ function onDocumentClick(event) {
 
 function render() {
     renderBurgers();
-    renderSimple(menu.extras, extrasList, "EXTRA", "extras-list");
-    renderSimple(menu.drinks, drinksList, "DRINK", "drinks-list");
+    const visibleExtras = menu.extras.filter((item) => item.id !== 9);
+    renderSimple(visibleExtras, extrasList, "EXTRA", "extras-list");
+
+    // Las gaseosas quedan desactivadas temporalmente si su seccion no esta en HTML.
+    if (drinksList) {
+        renderSimple(menu.drinks, drinksList, "DRINK", "drinks-list");
+    }
     renderCart();
 }
 
