@@ -89,12 +89,14 @@ h2 {
 .item-img {
     width: 100%;
     min-height: 78px;
-    background: #eeeeee;
+    background-image: url("burger_chester.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #eeeeee;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
 }
 
 .item-details h3 {

@@ -153,7 +153,7 @@ function render() {
 function renderBurgers() {
     burgersList.innerHTML = menu.burgers.map((item) => `
         <article class="item-card">
-            <div class="item-img" aria-hidden="true">BURGER</div>
+os""            <div class="item-img" aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
@@ -171,7 +171,7 @@ function renderBurgers() {
 function renderSimple(list, container, label, type) {
     container.innerHTML = list.map((item) => `
         <article class="item-card">
-            <div class="item-img" aria-hidden="true">${label}</div>
+            <div class="item-img" aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
                 <div class="price-tag">${formatMoney(item.price)}</div>
