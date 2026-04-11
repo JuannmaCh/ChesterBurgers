@@ -91,7 +91,7 @@ h2 {
 }
 
 .item-card {
-    background: var(--surface);
+    background: transparent;
     border: none;
     border-bottom: 2px solid var(--red);
     margin-bottom: 12px;
