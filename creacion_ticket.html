@@ -302,7 +302,15 @@
             let subtotal = '-', envio = '-', total = '-';
 
             lines.forEach(line => {
-                const itemMatch = line.match(/^-\s*(\d+)\s*x\s+(.+?)\s*\(/);
+                const normalizedLine = line.trim();
+                // Formato actual: - 1 x Criolla (NotCo) (Triple) ($ 17.000) = $ 17.000
+                let itemMatch = normalizedLine.match(/^\-\s*(\d+)\s*x\s+(.+)\s+\(([^()]*)\)\s*=\s*(.+)$/);
+
+                // Fallback para formatos mas viejos sin el bloque final de subtotal
+                if (!itemMatch) {
+                    itemMatch = normalizedLine.match(/^\-\s*(\d+)\s*x\s+(.+?)\s*\(/);
+                }
+
                 if (itemMatch) {
                     tBody.innerHTML += `<tr>
                         <td class="td-qty">${itemMatch[1]}</td>
@@ -310,9 +318,15 @@
                     </tr>`;
                 }
 
-                if (/SUBTOTAL:/i.test(line))     subtotal = line.split(':')[1].trim();
-                if (/^ENVIO:/i.test(line.trim())) envio    = line.split(':')[1].trim();
-                if (/TOTAL FINAL:/i.test(line))   total    = line.split(':')[1].trim();
+                if (/SUBTOTAL:/i.test(normalizedLine)) {
+                    subtotal = normalizedLine.split(/:(.+)/)[1].trim();
+                }
+                if (/^ENVIO:/i.test(normalizedLine)) {
+                    envio = normalizedLine.split(/:(.+)/)[1].trim();
+                }
+                if (/TOTAL FINAL:/i.test(normalizedLine)) {
+                    total = normalizedLine.split(/:(.+)/)[1].trim();
+                }
             });
 
             document.getElementById('t-subtotal').innerText = subtotal;
