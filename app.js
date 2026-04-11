@@ -20,13 +20,13 @@ const currencyFormatter = new Intl.NumberFormat(LOCALE, {
 
 const menu = {
     burgers: [
-        { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon y doble cheddar" },
-        { id: 2, name: "Cheese & Bacon", price: 12800, desc: "Doble medallon, cheddar y panceta" },
-        { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon, cheddar, huevo y panceta" },
-        { id: 4, name: "Crispy Chester", price: 13000, desc: "Cebolla crispy y salsa chester" },
-        { id: 5, name: "Clasica", price: 12300, desc: "Lechuga, tomate, cebolla y salsa chester" },
-        { id: 6, name: "Criolla", price: 14000, desc: "Provoleta, morrones, cebolla caramelizada" },
-        { id: 7, name: "Chesty", price: 13000, desc: "Panceta, pepino y salsa chesty" }
+        { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon 90grs y doble cheddar con pan de kalis" },
+        { id: 2, name: "Cheese & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar y panceta con pan de kalis" },
+        { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis" },
+        { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cebolla crispy y salsa chester con pan de kalis" },
+        { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla y salsa chester con pan de kalis" },
+        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones y cebolla caramelizada con pan de kalis" },
+        { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, panceta, pepino y salsa chesty con pan de kalis" }
     ],
     extras: [
         { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion grande" },
@@ -161,7 +161,7 @@ function renderBurgers() {
             <div class="item-img" aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
-                <p>${item.desc}. Pan de Kalis y medallones de carne de 90gr.</p>
+                <p>${item.desc}</p>
                 <div class="options">
                     <label><input type="checkbox" id="notco-${item.id}"> NotCo</label>
                     <label><input type="checkbox" id="triple-${item.id}"> Triple (+${formatMoney(3000)})</label>
