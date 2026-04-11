@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chester - Generador de Tickets</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --red: #8b0000;
+            --cream: #fdf6e3;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e5e5e5;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .admin-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 { color: var(--red); margin-top: 0; }
+
+        textarea {
+            width: 100%;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--red);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        button:hover { background-color: #a00000; }
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+
+        #btn-print { background-color: #1a6e1a; display: none; }
+        #btn-print:hover { background-color: #1f8c1f; }
+
+        /* Zona de preview del ticket generado */
+        #image-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #image-container p {
+            margin: 0;
+            font-size: 13px;
+            color: #555;
+        }
+
+        #ticket-image {
+            border: 1px dashed #aaa;
+            border-radius: 4px;
+            max-width: 100%;
+        }
+
+        /* ---- TICKET (sólo se usa para renderizar, está oculto visualmente) ---- */
+        #ticket-render-area {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            background: white;
+        }
+
+        /* ---- Estilos internos del ticket ---- */
+        .ticket {
+            width: 300px;
+            padding: 16px 14px;
+            background: white;
+            color: black;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+        }
+
+        .ticket .t-header {
+            text-align: center;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .ticket .t-header h1 {
+            margin: 0 0 2px 0;
+            font-size: 20px;
+            font-family: 'Arial Black', Arial, sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .ticket .t-header .subtitle {
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+
+        .ticket .t-datetime {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .ticket .t-section {
+            border-top: 1px dashed black;
+            padding-top: 8px;
+            margin-top: 2px;
+            margin-bottom: 8px;
+        }
+
+        .ticket .t-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        .ticket .t-label {
+            font-weight: bold;
+            min-width: 80px;
+        }
+
+        .ticket .t-value {
+            text-align: right;
+        }
+
+        .ticket table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4px;
+        }
+
+        .ticket table th {
+            border-bottom: 1px solid black;
+            text-align: left;
+            font-size: 12px;
+            padding-bottom: 4px;
+        }
+
+        .ticket table td {
+            padding: 3px 0;
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        .ticket .td-qty {
+            width: 28px;
+            font-weight: bold;
+        }
+
+        .ticket .td-name { padding-left: 4px; }
+
+        .ticket .t-totals {
+            border-top: 1px dashed black;
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+
+        .ticket .t-totals .t-row {
+            font-size: 13px;
+        }
+
+        .ticket .t-grand-total {
+            border-top: 2px solid black;
+            margin-top: 6px;
+            padding-top: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ticket .t-footer {
+            text-align: center;
+            font-size: 11px;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed black;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-panel">
+        <h2>🍔 Chester - Panel de Cocina</h2>
+        <p style="font-size: 13px; color: #666; margin-top: 0;">Pega aquí el mensaje de WhatsApp del pedido:</p>
+        <textarea id="whatsapp-input" placeholder="NUEVO PEDIDO - CHESTER BURGER&#10;&#10;Cliente: Juan Chiesa&#10;Direccion: Chaco 129&#10;Zona: Zona Sur&#10;&#10;- 1 x Criolla ($ 14.000) = $ 14.000&#10;..."></textarea>
+        <div class="btn-group">
+            <button onclick="generateTicket()">📄 Generar Ticket</button>
+            <button id="btn-print" onclick="printTicket()">🖨️ Imprimir</button>
+        </div>
+    </div>
+
+    <div id="image-container">
+        <p>Vista previa del ticket generado:</p>
+        <img id="ticket-image" alt="Ticket generado" />
+    </div>
+
+    <!-- Área oculta para renderizar el ticket antes de convertirlo a PNG -->
+    <div id="ticket-render-area">
+        <div class="ticket" id="ticket">
+            <div class="t-header">
+                <h1>CHESTER BURGER</h1>
+                <div class="subtitle">TICKET DE PEDIDO</div>
+            </div>
+
+            <div class="t-datetime">
+                <span id="t-date">--/--/--</span>
+                <span id="t-time">--:--</span>
+            </div>
+
+            <div class="t-section">
+                <div class="t-row"><span class="t-label">Cliente:</span><span class="t-value" id="t-cliente">-</span></div>
+                <div class="t-row"><span class="t-label">Dirección:</span><span class="t-value" id="t-direccion">-</span></div>
+                <div class="t-row"><span class="t-label">Zona:</span><span class="t-value" id="t-zona">-</span></div>
+            </div>
+
+            <div class="t-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="td-qty">Cant</th>
+                            <th class="td-name">Producto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="t-body"></tbody>
+                </table>
+            </div>
+
+            <div class="t-totals">
+                <div class="t-row"><span>Subtotal:</span><span id="t-subtotal">-</span></div>
+                <div class="t-row"><span>Envío:</span><span id="t-envio">-</span></div>
+                <div class="t-grand-total">
+                    <span>TOTAL:</span><span id="t-total">-</span>
+                </div>
+            </div>
+
+            <div class="t-footer">¡A cocinar! 🍔🔥</div>
+        </div>
+    </div>
+
+    <script>
+        let ticketDataURL = null;
+
+        function generateTicket() {
+            const input = document.getElementById('whatsapp-input').value.trim();
+            if (!input) return alert("Pega el mensaje de WhatsApp primero.");
+
+            // Fecha y hora actuales
+            const now = new Date();
+            document.getElementById('t-date').innerText = now.toLocaleDateString('es-AR');
+            document.getElementById('t-time').innerText = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+            // Parsear info del cliente
+            const get = (label) => {
+                const m = input.match(new RegExp(label + ':\\s*(.+)'));
+                return m ? m[1].trim() : '-';
+            };
+            document.getElementById('t-cliente').innerText    = get('Cliente');
+            document.getElementById('t-direccion').innerText  = get('Direccion');
+            document.getElementById('t-zona').innerText       = get('Zona');
+
+            // Parsear ítems: "- 1 x Criolla ($ 14.000) = $ 14.000"
+            const tBody = document.getElementById('t-body');
+            tBody.innerHTML = '';
+
+            const lines = input.split('\n');
+            let subtotal = '-', envio = '-', total = '-';
+
+            lines.forEach(line => {
+                const itemMatch = line.match(/^-\s*(\d+)\s*x\s+(.+?)\s*\(/);
+                if (itemMatch) {
+                    tBody.innerHTML += `<tr>
+                        <td class="td-qty">${itemMatch[1]}</td>
+                        <td class="td-name">${itemMatch[2].trim()}</td>
+                    </tr>`;
+                }
+
+                if (/SUBTOTAL:/i.test(line))     subtotal = line.split(':')[1].trim();
+                if (/^ENVIO:/i.test(line.trim())) envio    = line.split(':')[1].trim();
+                if (/TOTAL FINAL:/i.test(line))   total    = line.split(':')[1].trim();
+            });
+
+            document.getElementById('t-subtotal').innerText = subtotal;
+            document.getElementById('t-envio').innerText    = envio;
+            document.getElementById('t-total').innerText    = total;
+
+            // Renderizar a PNG con html2canvas
+            const ticketEl = document.getElementById('ticket');
+            html2canvas(ticketEl, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                useCORS: true
+            }).then(canvas => {
+                ticketDataURL = canvas.toDataURL('image/png');
+                document.getElementById('ticket-image').src = ticketDataURL;
+                document.getElementById('image-container').style.display = 'flex';
+                document.getElementById('btn-print').style.display = 'block';
+            }).catch(err => {
+                console.error(err);
+                alert('Error al generar la imagen. Revisá la consola.');
+            });
+        }
+
+        function printTicket() {
+            if (!ticketDataURL) return;
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <!DOCTYPE html><html><head>
+                <style>
+                    * { margin: 0; padding: 0; }
+                    body { display: flex; justify-content: center; }
+                    img { width: 300px; }
+                    @media print { body { margin: 0; } }
+                </style>
+                </head><body onload="window.print(); window.close();">
+                <img src="${ticketDataURL}" />
+                </body></html>
+            `);
+            win.document.close();
+        }
+    </script>
+</body>
+</html>
