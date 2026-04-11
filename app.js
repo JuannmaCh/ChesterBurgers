@@ -9,7 +9,7 @@ const SHIPPING_ZONES = {
     centro: { label: "Zona 1 (0 a 3 km)", price: 1000 },
     norte: { label: "Zona 2 (3 a 5 km)", price: 3000 },
     sur: { label: "Zona 3 (5 a 7 km)", price: 4000 },
-    retiro: { label: "Retiro en local", price: 0 }
+    retiro: { label: "Take away", price: 0 }
 };
 
 const currencyFormatter = new Intl.NumberFormat(LOCALE, {
@@ -57,7 +57,10 @@ const grandTotalPrice = document.getElementById("grand-total-price");
 const checkoutDetailList = document.getElementById("checkout-detail-list");
 const checkoutDetailSubtotal = document.getElementById("checkout-detail-subtotal");
 const customerNameInput = document.getElementById("customer-name");
-const customerAddressInput = document.getElementById("customer-address");
+const deliveryAddressFields = document.getElementById("delivery-address-fields");
+const customerStreetNumberInput = document.getElementById("customer-street-number");
+const customerNeighborhoodSelect = document.getElementById("customer-neighborhood");
+const customerBetweenStreetsInput = document.getElementById("customer-between-streets");
 const deliveryZoneSelect = document.getElementById("delivery-zone");
 const pickupAddressNote = document.getElementById("pickup-address-note");
 const checkoutModal = document.getElementById("checkout-modal");
@@ -86,7 +89,9 @@ function bindEvents() {
     checkoutModal.addEventListener("click", onCheckoutBackdropClick);
 
     customerNameInput.addEventListener("input", saveCustomerData);
-    customerAddressInput.addEventListener("input", saveCustomerData);
+    customerStreetNumberInput.addEventListener("input", saveCustomerData);
+    customerNeighborhoodSelect.addEventListener("change", saveCustomerData);
+    customerBetweenStreetsInput.addEventListener("input", saveCustomerData);
 
     deliveryZoneSelect.addEventListener("change", () => {
         saveCustomerData();
@@ -336,6 +341,13 @@ function formatMoney(value) {
     return currencyFormatter.format(value);
 }
 
+function formatDeliveryAddress(streetNumber, neighborhood, betweenStreets) {
+    const parts = [streetNumber];
+    if (neighborhood) parts.push(`Barrio ${neighborhood}`);
+    if (betweenStreets) parts.push(`Entre calles ${betweenStreets}`);
+    return parts.join(", ");
+}
+
 function sendOrder() {
     if (cart.length === 0) {
         showFeedback("El carrito esta vacio");
@@ -352,13 +364,18 @@ function sendOrder() {
     const shipping = zoneData.price;
     const total = subtotal + shipping;
     const isPickup = zoneCode === "retiro";
-    const orderAddress = isPickup ? PICKUP_ADDRESS : customerAddressInput.value.trim();
+    const streetNumber = customerStreetNumberInput.value.trim();
+    const neighborhood = customerNeighborhoodSelect.value;
+    const betweenStreets = customerBetweenStreetsInput.value.trim();
+    const orderAddress = isPickup
+        ? PICKUP_ADDRESS
+        : formatDeliveryAddress(streetNumber, neighborhood, betweenStreets);
 
     const lines = [
         "NUEVO PEDIDO - CHESTER BURGER",
         "",
         `Cliente: ${customerNameInput.value.trim()}`,
-        `${isPickup ? "Retiro en" : "Direccion"}: ${orderAddress}`,
+        `${isPickup ? "Take away en" : "Direccion"}: ${orderAddress}`,
         `Zona: ${zoneData.label}`,
         ""
     ];
@@ -435,7 +452,9 @@ function closeCartDrawer() {
 
 function validateCheckout() {
     const name = customerNameInput.value.trim();
-    const address = customerAddressInput.value.trim();
+    const streetNumber = customerStreetNumberInput.value.trim();
+    const neighborhood = customerNeighborhoodSelect.value;
+    const betweenStreets = customerBetweenStreetsInput.value.trim();
     const zone = deliveryZoneSelect.value;
 
     if (name.length < 2) {
@@ -444,19 +463,31 @@ function validateCheckout() {
         return false;
     }
 
+    if (!zone || !SHIPPING_ZONES[zone]) {
+        showFeedback("Selecciona tu zona para calcular envio");
+        deliveryZoneSelect.focus();
+        return false;
+    }
+
     if (zone === "retiro") {
         return true;
     }
 
-    if (address.length < 5) {
-        showFeedback("Ingresa una direccion valida para continuar");
-        customerAddressInput.focus();
+    if (streetNumber.length < 5) {
+        showFeedback("Ingresa calle y numero para continuar");
+        customerStreetNumberInput.focus();
         return false;
     }
 
-    if (!zone || !SHIPPING_ZONES[zone]) {
-        showFeedback("Selecciona tu zona para calcular envio");
-        deliveryZoneSelect.focus();
+    if (!neighborhood) {
+        showFeedback("Selecciona un barrio para continuar");
+        customerNeighborhoodSelect.focus();
+        return false;
+    }
+
+    if (betweenStreets.length < 3) {
+        showFeedback("Ingresa las entre calles para continuar");
+        customerBetweenStreetsInput.focus();
         return false;
     }
 
@@ -489,9 +520,16 @@ function loadCart() {
 }
 
 function saveCustomerData() {
+    const streetNumber = customerStreetNumberInput.value.trim();
+    const neighborhood = customerNeighborhoodSelect.value;
+    const betweenStreets = customerBetweenStreetsInput.value.trim();
+
     const data = {
         name: customerNameInput.value.trim(),
-        address: customerAddressInput.value.trim(),
+        streetNumber,
+        neighborhood,
+        betweenStreets,
+        address: formatDeliveryAddress(streetNumber, neighborhood, betweenStreets),
         zone: deliveryZoneSelect.value
     };
 
@@ -510,8 +548,18 @@ function hydrateCustomerData() {
             customerNameInput.value = data.name;
         }
 
-        if (typeof data.address === "string") {
-            customerAddressInput.value = data.address;
+        if (typeof data.streetNumber === "string") {
+            customerStreetNumberInput.value = data.streetNumber;
+        } else if (typeof data.address === "string") {
+            customerStreetNumberInput.value = data.address;
+        }
+
+        if (typeof data.neighborhood === "string") {
+            customerNeighborhoodSelect.value = data.neighborhood;
+        }
+
+        if (typeof data.betweenStreets === "string") {
+            customerBetweenStreetsInput.value = data.betweenStreets;
         }
 
         if (typeof data.zone === "string" && SHIPPING_ZONES[data.zone]) {
@@ -544,8 +592,11 @@ function updateDeliveryModeUI() {
         pickupAddressNote.hidden = !isPickup;
     }
 
-    customerAddressInput.disabled = isPickup;
-    customerAddressInput.placeholder = isPickup
-        ? "No hace falta direccion para retiro en local"
-        : "Ej: Av. Siempre Viva 123";
+    if (deliveryAddressFields) {
+        deliveryAddressFields.hidden = isPickup;
+    }
+
+    customerStreetNumberInput.disabled = isPickup;
+    customerNeighborhoodSelect.disabled = isPickup;
+    customerBetweenStreetsInput.disabled = isPickup;
 }

@@ -60,8 +60,25 @@
         <label class="form-label" for="customer-name">Nombre</label>
         <input id="customer-name" class="form-input" type="text" autocomplete="name" placeholder="Ej: Juan Perez">
 
-        <label class="form-label" for="customer-address">Direccion</label>
-        <input id="customer-address" class="form-input" type="text" autocomplete="street-address" placeholder="Ej: Av. Siempre Viva 123">
+        <div id="delivery-address-fields">
+            <label class="form-label" for="customer-street-number">Calle y numero</label>
+            <input id="customer-street-number" class="form-input" type="text" autocomplete="street-address" placeholder="Ej: Av. Siempre Viva 123">
+
+            <label class="form-label" for="customer-neighborhood">Barrio</label>
+            <select id="customer-neighborhood" class="form-select">
+                <option value="">Seleccioná un barrio</option>
+                <option value="Don Bosco">Don Bosco</option>
+                <option value="Bernal">Bernal</option>
+                <option value="Wilde">Wilde</option>
+                <option value="Quilmes">Quilmes</option>
+                <option value="Quilmes Oeste">Quilmes Oeste</option>
+                <option value="Sarandi">Sarandi</option>
+                <option value="Avellaneda">Avellaneda</option>
+            </select>
+
+            <label class="form-label" for="customer-between-streets">Entre calles</label>
+            <input id="customer-between-streets" class="form-input" type="text" autocomplete="off" placeholder="Ej: Maipu y Belgrano">
+        </div>
 
         <label class="form-label" for="delivery-zone">Zona</label>
         <select id="delivery-zone" class="form-select">
@@ -69,9 +86,12 @@
             <option value="centro">Zona 1 (0 a 3 km) - $1000</option>
             <option value="norte">Zona 2 (3 a 5 km) - $3000</option>
             <option value="sur">Zona 3 (5 a 7 km) - $4000</option>
-            <option value="retiro">Retiro en local (sin costo)</option>
+            <option value="retiro">Take away (sin costo)</option>
         </select>
-        <p id="pickup-address-note" class="form-label" hidden>Retiro en: Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina</p>
+        <p id="pickup-address-note" class="form-label" hidden>
+            Take away en:
+            <a href="https://maps.app.goo.gl/WkR2AVwVvyQ6uB3u5" target="_blank" rel="noopener noreferrer">Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina</a>
+        </p>
 
         <div class="checkout-totals" aria-live="polite">
             <div>Subtotal: <span id="subtotal-price">$0</span></div>
