@@ -113,10 +113,10 @@ h2 {
     width: 100%;
     min-height: 78px;
     background-image: url("burger_chester.jpeg");
-    background-size: cover;
+    background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: transparent;
+    background-color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
