@@ -362,10 +362,16 @@ function confirmBurgerCustomizer() {
         image: currentBurgerToCustomize.image
     });
 
-    closeBurgerCustomizer();
+    provideAddButtonFeedback(confirmBurgerCustomizerBtn, {
+        temporaryText: "AGREGADA ✅",
+        duration: 700
+    }).then(() => {
+        closeBurgerCustomizer();
+    });
 }
 
 function openBurgerCustomizer() {
+    resetButtonFeedbackState(confirmBurgerCustomizerBtn);
     burgerCustomizerModal.removeAttribute("hidden");
     document.body.classList.add("no-scroll");
     requestAnimationFrame(() => {
@@ -407,24 +413,44 @@ function addItem(id, type, button) {
         image: item.image
     });
 
-    provideAddButtonFeedback(button);
+    provideAddButtonFeedback(button, {
+        temporaryText: "LISTO ✅",
+        duration: 650
+    });
 }
 
-function provideAddButtonFeedback(button) {
-    if (!button || button.disabled) return;
+function provideAddButtonFeedback(button, options = {}) {
+    if (!button || button.disabled) return Promise.resolve();
+
+    const {
+        temporaryText = "LISTO ✅",
+        duration = 650
+    } = options;
 
     const originalText = button.dataset.originalText || button.textContent;
     button.dataset.originalText = originalText;
-    button.textContent = "!LISTO!";
+    button.textContent = temporaryText;
     button.classList.add("is-confirmed");
     button.disabled = true;
 
     clearTimeout(button._feedbackTimeoutId);
-    button._feedbackTimeoutId = setTimeout(() => {
-        button.textContent = originalText;
-        button.classList.remove("is-confirmed");
-        button.disabled = false;
-    }, 650);
+    return new Promise((resolve) => {
+        button._feedbackTimeoutId = setTimeout(() => {
+            resetButtonFeedbackState(button);
+            resolve();
+        }, duration);
+    });
+}
+
+function resetButtonFeedbackState(button) {
+    if (!button) return;
+
+    clearTimeout(button._feedbackTimeoutId);
+    if (button.dataset.originalText) {
+        button.textContent = button.dataset.originalText;
+    }
+    button.classList.remove("is-confirmed");
+    button.disabled = false;
 }
 
 function addToCart({ key, name, unitPrice, image = "" }) {

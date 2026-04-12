@@ -192,7 +192,9 @@ h2 {
 }
 
 .btn-add.is-confirmed,
-.btn-add.is-confirmed:disabled {
+.btn-add.is-confirmed:disabled,
+.btn-order.is-confirmed,
+.btn-order.is-confirmed:disabled {
     background: #1f7a2e;
     color: #ffffff;
 }
