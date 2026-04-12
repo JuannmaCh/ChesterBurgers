@@ -34,8 +34,9 @@ const menu = {
     ],
     drinks: [
         { id: 10, name: "Coca Cola", price: 3000, desc: "Lata 354 ml", image: "lata_coca.webp", inStock: false },
-        { id: 11, name: "Sprite", price: 3000, desc: "Lata 354 ml", image: "sprite_lata.jpeg", inStock: false },
-        { id: 12, name: "Agua Mineral", price: 2000, desc: "Botella 500 ml", image: "agua.jpg", inStock: false }
+        { id: 11, name: "Sprite", price: 3000, desc: "Lata 354 ml", image: "lata_sprite.png", inStock: false },
+        { id: 12, name: "Agua Mineral", price: 2000, desc: "Botella 500 ml", image: "agua.png", inStock: false },
+        { id: 13, name: "Fanta", price: 3000, desc: "Lata 354 ml", image: "lata_fanta.png", inStock: false }
     ]
 };
 
