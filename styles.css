@@ -232,6 +232,29 @@ h2 {
     font-size: 0.92rem;
 }
 
+.cart-item-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cart-item-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e4d7d7;
+    overflow: hidden;
+    flex: 0 0 auto;
+}
+
+.cart-item-thumb-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
 .cart-controls {
     display: flex;
     flex-wrap: wrap;
