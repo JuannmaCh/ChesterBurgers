@@ -111,12 +111,13 @@ h2 {
 
 .item-img {
     width: 100%;
-    min-height: 78px;
+    min-height: 0;
+    aspect-ratio: 16 / 9;
     background-image: url("burger_chester.jpeg");
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: #ffffff;
+    background-color: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -599,7 +600,9 @@ h2 {
 
     .item-img {
         width: 82px;
-        min-height: 82px;
+        min-height: 0;
+        height: 82px;
+        aspect-ratio: 1 / 1;
     }
 
     .btn-add {
