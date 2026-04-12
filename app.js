@@ -374,10 +374,10 @@ function openBurgerCustomizer() {
 
 function closeBurgerCustomizer() {
     burgerCustomizerModal.classList.remove("is-open");
-    burgerCustomizerModal.addEventListener("transitionend", () => {
+    setTimeout(() => {
         burgerCustomizerModal.setAttribute("hidden", "");
         document.body.classList.remove("no-scroll");
-    }, { once: true });
+    }, 300);
     currentBurgerToCustomize = null;
 }
 
