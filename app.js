@@ -20,13 +20,13 @@ const currencyFormatter = new Intl.NumberFormat(LOCALE, {
 
 const menu = {
     burgers: [
-        { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon 90grs y doble cheddar con pan de kalis" },
-        { id: 2, name: "Cheese & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar y panceta con pan de kalis" },
-        { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis" },
-        { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cebolla crispy y salsa chester con pan de kalis" },
-        { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla y salsa chester con pan de kalis" },
-        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones y cebolla caramelizada con pan de kalis" },
-        { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, panceta, pepino y salsa chesty con pan de kalis" }
+        { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon 90grs y doble cheddar con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 2, name: "Cheese & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar y panceta con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cebolla crispy y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones y cebolla caramelizada con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, panceta, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
     ],
     extras: [
         { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion grande", image: "papas_fritas.avif" },
@@ -201,9 +201,13 @@ function renderCart() {
     } else {
         cartItems.innerHTML = cart.map((item) => {
             const subtotal = item.unitPrice * item.qty;
+            const thumbStyle = item.image ? ` style="background-image: url('${item.image}')"` : "";
             return `
                 <div class="cart-row">
-                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-main">
+                        <div class="cart-item-thumb"${thumbStyle} aria-hidden="true"></div>
+                        <div class="cart-item-name">${item.name}</div>
+                    </div>
                     <div class="cart-controls">
                         <button type="button" class="qty-btn" data-action="decrease-qty" data-key="${item.key}" aria-label="Disminuir cantidad de ${item.name}">-</button>
                         <span class="qty-value">${item.qty}</span>
@@ -245,7 +249,8 @@ function addBurger(id) {
     addToCart({
         key: createCartKey(baseItem.id, modifiers),
         name: displayName,
-        unitPrice: finalPrice
+        unitPrice: finalPrice,
+        image: baseItem.image
     });
 }
 
@@ -262,17 +267,21 @@ function addItem(id, type) {
     addToCart({
         key: createCartKey(item.id, []),
         name: item.name,
-        unitPrice: item.price
+        unitPrice: item.price,
+        image: item.image
     });
 }
 
-function addToCart({ key, name, unitPrice }) {
+function addToCart({ key, name, unitPrice, image = "" }) {
     const existingItem = cart.find((item) => item.key === key);
 
     if (existingItem) {
         existingItem.qty += 1;
+        if (!existingItem.image && image) {
+            existingItem.image = image;
+        }
     } else {
-        cart.push({ key, name, unitPrice, qty: 1 });
+        cart.push({ key, name, unitPrice, qty: 1, image });
     }
 
     persistAndRefresh(`${name} agregado al carrito`);
@@ -531,6 +540,7 @@ function loadCart() {
                 && typeof item.name === "string"
                 && Number.isFinite(item.unitPrice)
                 && Number.isFinite(item.qty)
+                && (item.image === undefined || typeof item.image === "string")
                 && item.qty > 0;
         });
     } catch (error) {
