@@ -1057,3 +1057,4 @@ function refreshCustomizerOptionLabels() {
             ? `${baseLabel} (+${formatMoney(price)})`
             : baseLabel;
     });
+}
