@@ -33,9 +33,9 @@ const menu = {
         { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 10 unidades" }
     ],
     drinks: [
-        { id: 10, name: "Coca Cola 500ml", price: 2500 },
-        { id: 11, name: "Sprite 500ml", price: 2500 },
-        { id: 12, name: "Agua Mineral", price: 2000 }
+        { id: 10, name: "Coca Cola", price: 3000, desc: "Lata 354 ml", inStock: false },
+        { id: 11, name: "Sprite", price: 3000, desc: "Lata 354 ml", inStock: false },
+        { id: 12, name: "Agua Mineral", price: 2000, desc: "Botella 500 ml", inStock: false }
     ]
 };
 
@@ -176,15 +176,20 @@ function renderBurgers() {
 function renderSimple(list, container, label, type) {
     container.innerHTML = list.map((item) => {
         const imgStyle = item.image ? ` style="background-image: url('${item.image}')"` : "";
+        const isOutOfStock = item.inStock === false;
+        const cardClass = isOutOfStock ? "item-card is-out-of-stock" : "item-card";
+        const stockBadge = isOutOfStock ? '<span class="stock-badge" aria-label="Sin stock">SIN STOCK</span>' : "";
+        const buttonLabel = isOutOfStock ? "SIN STOCK" : "ANADIR";
         return `
-        <article class="item-card">
+        <article class="${cardClass}">
             <div class="item-img"${imgStyle} aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
                 ${item.desc ? `<p>${item.desc}</p>` : ""}
+                ${stockBadge}
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
-            <button class="btn-add" type="button" data-action="add-item" data-id="${item.id}" data-type="${type}" aria-label="Anadir ${item.name}">ANADIR</button>
+            <button class="btn-add" type="button" data-action="add-item" data-id="${item.id}" data-type="${type}" aria-label="Anadir ${item.name}" ${isOutOfStock ? "disabled" : ""}>${buttonLabel}</button>
         </article>
     `;
     }).join("");
@@ -248,6 +253,11 @@ function addItem(id, type) {
     const source = type === "extras-list" ? menu.extras : menu.drinks;
     const item = source.find((current) => current.id === id);
     if (!item) return;
+
+    if (item.inStock === false) {
+        showFeedback(`${item.name} sin stock`);
+        return;
+    }
 
     addToCart({
         key: createCartKey(item.id, []),
