@@ -30,7 +30,7 @@ const menu = {
     ],
     extras: [
         { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion grande", image: "papas_fritas.avif" },
-        { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 10 unidades" }
+        { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 10 unidades", image: "aros_de_cebolla.webp", inStock: false }
     ],
     drinks: [
         { id: 10, name: "Coca Cola", price: 3000, desc: "Lata 354 ml", image: "lata_coca.webp", inStock: false },
@@ -146,8 +146,7 @@ function onDocumentClick(event) {
 
 function render() {
     renderBurgers();
-    const visibleExtras = menu.extras.filter((item) => item.id !== 9);
-    renderSimple(visibleExtras, extrasList, "EXTRA", "extras-list");
+    renderSimple(menu.extras, extrasList, "EXTRA", "extras-list");
 
     // Las gaseosas quedan desactivadas temporalmente si su seccion no esta en HTML.
     if (drinksList) {
