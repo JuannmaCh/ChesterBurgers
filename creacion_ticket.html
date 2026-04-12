@@ -157,6 +157,15 @@
             text-align: right;
         }
 
+        .ticket #t-aclaraciones-row {
+            align-items: flex-start;
+        }
+
+        .ticket #t-aclaraciones {
+            max-width: 180px;
+            white-space: pre-line;
+        }
+
         .ticket table {
             width: 100%;
             border-collapse: collapse;
@@ -282,7 +291,8 @@
         function generateTicket() {
             const input = document.getElementById('whatsapp-input').value.trim();
             if (!input) return alert("Pega el mensaje de WhatsApp primero.");
-            const lines = input.split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            const normalizedInput = input.replace(/\r\n?/g, '\n');
+            const lines = normalizedInput.split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
 
             // Fecha y hora actuales
             const now = new Date();
@@ -309,10 +319,17 @@
             document.getElementById('t-zona').innerText = getFieldValue(['Zona']);
             document.getElementById('t-pago').innerText = getFieldValue(['Método de pago', 'Metodo de pago']);
 
-            const notes = getFieldValue(['Aclaraciones']);
+            const notesMatch = normalizedInput.match(/(?:^|\n)\s*Aclaraciones\s*:\s*([\s\S]*?)(?=\n\s*-\s*\d+\s*x\s+|$)/i);
+            const notes = notesMatch
+                ? notesMatch[1]
+                    .split('\n')
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .join('\n')
+                : '-';
             const notesRow = document.getElementById('t-aclaraciones-row');
             if (notes !== '-') {
-                document.getElementById('t-aclaraciones').innerText = notes;
+                document.getElementById('t-aclaraciones').textContent = notes;
                 notesRow.style.display = 'flex';
             } else {
                 notesRow.style.display = 'none';

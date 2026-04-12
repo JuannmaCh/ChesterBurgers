@@ -6,6 +6,7 @@ const WHATSAPP_PHONE = "5491124031761";
 const PICKUP_ADDRESS = "Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina";
 const DEFAULT_ITEM_IMAGE = "burger_chester.jpeg";
 const DISCOUNT_PERCENTAGE = 0.1;
+const BURGER_CUSTOMIZER_HASH = "#burger-customizer";
 
 const CONFIG_PRICES = {
     modifiers: {
@@ -138,6 +139,7 @@ function bindEvents() {
     document.getElementById("customizer-cheddar").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-panceta").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-huevo").addEventListener("change", updateCustomizerPrice);
+    window.addEventListener("popstate", onWindowPopstate);
 
     customerNameInput.addEventListener("input", () => {
         clearFieldError(customerNameInput);
@@ -169,6 +171,21 @@ function bindEvents() {
         saveCustomerData();
         updateTotals();
     });
+}
+
+function getLocationWithoutHash() {
+    return `${window.location.pathname}${window.location.search}`;
+}
+
+function syncBodyScrollLock() {
+    const shouldLock = !checkoutModal.hidden || !burgerCustomizerModal.hidden;
+    document.body.classList.toggle("no-scroll", shouldLock);
+}
+
+function onWindowPopstate() {
+    if (!burgerCustomizerModal.hidden && window.location.hash !== BURGER_CUSTOMIZER_HASH) {
+        closeBurgerCustomizer({ fromHistory: true });
+    }
 }
 
 function onDocumentKeydown(event) {
@@ -372,8 +389,13 @@ function confirmBurgerCustomizer() {
 
 function openBurgerCustomizer() {
     resetButtonFeedbackState(confirmBurgerCustomizerBtn);
+
+    if (window.location.hash !== BURGER_CUSTOMIZER_HASH) {
+        window.history.pushState({ chesterOverlay: "burger-customizer" }, "", `${getLocationWithoutHash()}${BURGER_CUSTOMIZER_HASH}`);
+    }
+
     burgerCustomizerModal.removeAttribute("hidden");
-    document.body.classList.add("no-scroll");
+    syncBodyScrollLock();
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             burgerCustomizerModal.classList.add("is-open");
@@ -381,11 +403,23 @@ function openBurgerCustomizer() {
     });
 }
 
-function closeBurgerCustomizer() {
+function closeBurgerCustomizer(options = {}) {
+    const { fromHistory = false } = options;
+
+    if (!fromHistory && window.location.hash === BURGER_CUSTOMIZER_HASH) {
+        const customizerState = window.history.state && window.history.state.chesterOverlay === "burger-customizer";
+        if (customizerState) {
+            window.history.back();
+            return;
+        }
+
+        window.history.replaceState(window.history.state, "", getLocationWithoutHash());
+    }
+
     burgerCustomizerModal.classList.remove("is-open");
     setTimeout(() => {
         burgerCustomizerModal.setAttribute("hidden", "");
-        document.body.classList.remove("no-scroll");
+        syncBodyScrollLock();
     }, 300);
     currentBurgerToCustomize = null;
 }
@@ -678,7 +712,7 @@ function openCheckout() {
     closeCartDrawer();
     updateTotals();
     checkoutModal.removeAttribute("hidden");
-    document.body.classList.add("no-scroll");
+    syncBodyScrollLock();
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             checkoutModal.classList.add("is-open");
@@ -691,7 +725,7 @@ function closeCheckout() {
     checkoutModal.classList.remove("is-open");
     checkoutModal.addEventListener("transitionend", () => {
         checkoutModal.setAttribute("hidden", "");
-        document.body.classList.remove("no-scroll");
+        syncBodyScrollLock();
     }, { once: true });
 }
 
