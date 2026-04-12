@@ -90,12 +90,25 @@ function bindEvents() {
     submitOrderBtn.addEventListener("click", sendOrder);
     checkoutModal.addEventListener("click", onCheckoutBackdropClick);
 
-    customerNameInput.addEventListener("input", saveCustomerData);
-    customerStreetNumberInput.addEventListener("input", saveCustomerData);
-    customerNeighborhoodSelect.addEventListener("change", saveCustomerData);
-    customerBetweenStreetsInput.addEventListener("input", saveCustomerData);
+    customerNameInput.addEventListener("input", () => {
+        clearFieldError(customerNameInput);
+        saveCustomerData();
+    });
+    customerStreetNumberInput.addEventListener("input", () => {
+        clearFieldError(customerStreetNumberInput);
+        saveCustomerData();
+    });
+    customerNeighborhoodSelect.addEventListener("change", () => {
+        clearFieldError(customerNeighborhoodSelect);
+        saveCustomerData();
+    });
+    customerBetweenStreetsInput.addEventListener("input", () => {
+        clearFieldError(customerBetweenStreetsInput);
+        saveCustomerData();
+    });
 
     deliveryZoneSelect.addEventListener("change", () => {
+        clearFieldError(deliveryZoneSelect);
         saveCustomerData();
         updateTotals();
         updateDeliveryModeUI();
@@ -428,6 +441,8 @@ function sendOrder() {
     const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodedMessage}`;
     closeCheckout();
     window.open(whatsappUrl, "_blank", "noopener");
+    cart = [];
+    persistAndRefresh("Pedido enviado. Carrito vaciado");
 }
 
 function openCheckout() {
@@ -483,6 +498,8 @@ function closeCartDrawer() {
 }
 
 function validateCheckout() {
+    clearCheckoutErrors();
+
     const name = customerNameInput.value.trim();
     const streetNumber = customerStreetNumberInput.value.trim();
     const neighborhood = customerNeighborhoodSelect.value;
@@ -490,12 +507,14 @@ function validateCheckout() {
     const zone = deliveryZoneSelect.value;
 
     if (name.length < 2) {
+        markFieldInvalid(customerNameInput);
         showFeedback("Ingresa tu nombre para continuar");
         customerNameInput.focus();
         return false;
     }
 
     if (!zone || !SHIPPING_ZONES[zone]) {
+        markFieldInvalid(deliveryZoneSelect);
         showFeedback("Selecciona tu zona para calcular envio");
         deliveryZoneSelect.focus();
         return false;
@@ -506,24 +525,53 @@ function validateCheckout() {
     }
 
     if (streetNumber.length < 5) {
+        markFieldInvalid(customerStreetNumberInput);
         showFeedback("Ingresa calle y numero para continuar");
         customerStreetNumberInput.focus();
         return false;
     }
 
     if (!neighborhood) {
+        markFieldInvalid(customerNeighborhoodSelect);
         showFeedback("Selecciona un barrio para continuar");
         customerNeighborhoodSelect.focus();
         return false;
     }
 
     if (betweenStreets.length < 3) {
+        markFieldInvalid(customerBetweenStreetsInput);
         showFeedback("Ingresa las entre calles para continuar");
         customerBetweenStreetsInput.focus();
         return false;
     }
 
     return true;
+}
+
+function getCheckoutFields() {
+    return [
+        customerNameInput,
+        deliveryZoneSelect,
+        customerStreetNumberInput,
+        customerNeighborhoodSelect,
+        customerBetweenStreetsInput
+    ];
+}
+
+function markFieldInvalid(field) {
+    if (!field) return;
+    field.classList.add("is-invalid");
+    field.setAttribute("aria-invalid", "true");
+}
+
+function clearFieldError(field) {
+    if (!field) return;
+    field.classList.remove("is-invalid");
+    field.removeAttribute("aria-invalid");
+}
+
+function clearCheckoutErrors() {
+    getCheckoutFields().forEach(clearFieldError);
 }
 
 function saveCart() {
@@ -662,4 +710,10 @@ function updateDeliveryModeUI() {
     customerStreetNumberInput.disabled = isPickup;
     customerNeighborhoodSelect.disabled = isPickup;
     customerBetweenStreetsInput.disabled = isPickup;
+
+    if (isPickup) {
+        clearFieldError(customerStreetNumberInput);
+        clearFieldError(customerNeighborhoodSelect);
+        clearFieldError(customerBetweenStreetsInput);
+    }
 }

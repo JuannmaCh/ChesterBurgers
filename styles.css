@@ -359,6 +359,14 @@ h2 {
     background: #ffffff;
 }
 
+.form-input.is-invalid,
+.form-select.is-invalid,
+.form-input[aria-invalid="true"],
+.form-select[aria-invalid="true"] {
+    border-color: #c32028;
+    background: #fff5f5;
+}
+
 .checkout-totals {
     margin-top: 12px;
     border-top: 1px dashed #bbbbbb;
