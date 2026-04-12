@@ -24,10 +24,10 @@ const menu = {
         { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon 90grs y doble cheddar con pan de kalis", image: "burger_chester.jpeg" },
         { id: 2, name: "Cheese & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar y panceta con pan de kalis", image: "burger_chester.jpeg" },
         { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cebolla crispy y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones y cebolla caramelizada con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, panceta, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
+        { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, cebolla crispy y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla, cheddar y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones encurtidos, cebolla caramelizada y mayochurri con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, lechuga, tomate, cebolla, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
     ],
     extras: [
         { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion grande", image: "papas_fritas.avif" },
@@ -170,7 +170,18 @@ function render() {
 }
 
 function renderBurgers() {
-    burgersList.innerHTML = menu.burgers.map((item) => `
+    const burgersHeader = `
+        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid var(--red);">
+            <p style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">
+                ✅ <strong>Todas las burgers vienen con papas incluidas</strong>
+            </p>
+            <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #666;">
+                💡 Podés agregarle: <strong>Cheddar, Panceta o Huevo</strong> c/u $1.500
+            </p>
+        </div>
+    `;
+
+    burgersList.innerHTML = burgersHeader + menu.burgers.map((item) => `
         <article class="item-card">
             <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
             <div class="item-details">
@@ -179,6 +190,9 @@ function renderBurgers() {
                 <div class="options">
                     <label><input type="checkbox" id="notco-${item.id}"> NotCo</label>
                     <label><input type="checkbox" id="triple-${item.id}"> Triple (+${formatMoney(3000)})</label>
+                    <label><input type="checkbox" id="cheddar-${item.id}"> + Cheddar (+${formatMoney(1500)})</label>
+                    <label><input type="checkbox" id="panceta-${item.id}"> + Panceta (+${formatMoney(1500)})</label>
+                    <label><input type="checkbox" id="huevo-${item.id}"> + Huevo (+${formatMoney(1500)})</label>
                 </div>
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
@@ -246,6 +260,9 @@ function addBurger(id) {
 
     const isNotCo = document.getElementById(`notco-${id}`).checked;
     const isTriple = document.getElementById(`triple-${id}`).checked;
+    const isCheddar = document.getElementById(`cheddar-${id}`).checked;
+    const isPanceta = document.getElementById(`panceta-${id}`).checked;
+    const isHuevo = document.getElementById(`huevo-${id}`).checked;
 
     let finalPrice = baseItem.price;
     let displayName = baseItem.name;
@@ -260,6 +277,24 @@ function addBurger(id) {
         finalPrice += 3000;
         displayName += " (Triple)";
         modifiers.push("triple");
+    }
+
+    if (isCheddar) {
+        finalPrice += 1500;
+        displayName += " (+Cheddar)";
+        modifiers.push("cheddar");
+    }
+
+    if (isPanceta) {
+        finalPrice += 1500;
+        displayName += " (+Panceta)";
+        modifiers.push("panceta");
+    }
+
+    if (isHuevo) {
+        finalPrice += 1500;
+        displayName += " (+Huevo)";
+        modifiers.push("huevo");
     }
 
     addToCart({
