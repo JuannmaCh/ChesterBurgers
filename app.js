@@ -73,6 +73,14 @@ const liveRegion = document.getElementById("a11y-live");
 const clearCartBtn = document.getElementById("clear-cart");
 const orderBtn = document.getElementById("order-btn");
 
+const burgerCustomizerModal = document.getElementById("burger-customizer-modal");
+const closeBurgerCustomizerBtn = document.getElementById("close-customizer-btn");
+const confirmBurgerCustomizerBtn = document.getElementById("confirm-customizer-btn");
+const burgerCustomizerInfo = document.getElementById("customizer-burger-info");
+const burgerCustomizerPrice = document.getElementById("customizer-price");
+
+let currentBurgerToCustomize = null;
+
 hydrateCustomerData();
 render();
 bindEvents();
@@ -89,6 +97,14 @@ function bindEvents() {
     closeCheckoutBtn.addEventListener("click", closeCheckout);
     submitOrderBtn.addEventListener("click", sendOrder);
     checkoutModal.addEventListener("click", onCheckoutBackdropClick);
+    closeBurgerCustomizerBtn.addEventListener("click", closeBurgerCustomizer);
+    confirmBurgerCustomizerBtn.addEventListener("click", confirmBurgerCustomizer);
+    burgerCustomizerModal.addEventListener("click", onBurgerCustomizerBackdropClick);
+    document.getElementById("customizer-notco").addEventListener("change", updateCustomizerPrice);
+    document.getElementById("customizer-triple").addEventListener("change", updateCustomizerPrice);
+    document.getElementById("customizer-cheddar").addEventListener("change", updateCustomizerPrice);
+    document.getElementById("customizer-panceta").addEventListener("change", updateCustomizerPrice);
+    document.getElementById("customizer-huevo").addEventListener("change", updateCustomizerPrice);
 
     customerNameInput.addEventListener("input", () => {
         clearFieldError(customerNameInput);
@@ -116,8 +132,13 @@ function bindEvents() {
 }
 
 function onDocumentKeydown(event) {
-    if (event.key === "Escape" && !checkoutModal.hidden) {
-        closeCheckout();
+    if (event.key === "Escape") {
+        if (!burgerCustomizerModal.hidden) {
+            closeBurgerCustomizer();
+        }
+        if (!checkoutModal.hidden) {
+            closeCheckout();
+        }
     }
 }
 
@@ -176,7 +197,7 @@ function renderBurgers() {
                 ✅ <strong>Todas las burgers vienen con papas incluidas</strong>
             </p>
             <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #666;">
-                💡 Podés agregarle: <strong>Cheddar, Panceta o Huevo</strong> c/u $1.500
+                💡 Toca ANADIR para personalizar con extras: Cheddar, Panceta o Huevo c/u $1.500
             </p>
         </div>
     `;
@@ -187,16 +208,9 @@ function renderBurgers() {
             <div class="item-details">
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
-                <div class="options">
-                    <label><input type="checkbox" id="notco-${item.id}"> NotCo</label>
-                    <label><input type="checkbox" id="triple-${item.id}"> Triple (+${formatMoney(3000)})</label>
-                    <label><input type="checkbox" id="cheddar-${item.id}"> + Cheddar (+${formatMoney(1500)})</label>
-                    <label><input type="checkbox" id="panceta-${item.id}"> + Panceta (+${formatMoney(1500)})</label>
-                    <label><input type="checkbox" id="huevo-${item.id}"> + Huevo (+${formatMoney(1500)})</label>
-                </div>
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
-            <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Anadir ${item.name}">ANADIR</button>
+            <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}">ANADIR</button>
         </article>
     `).join("");
 }
@@ -258,14 +272,55 @@ function addBurger(id) {
     const baseItem = menu.burgers.find((burger) => burger.id === id);
     if (!baseItem) return;
 
-    const isNotCo = document.getElementById(`notco-${id}`).checked;
-    const isTriple = document.getElementById(`triple-${id}`).checked;
-    const isCheddar = document.getElementById(`cheddar-${id}`).checked;
-    const isPanceta = document.getElementById(`panceta-${id}`).checked;
-    const isHuevo = document.getElementById(`huevo-${id}`).checked;
+    currentBurgerToCustomize = baseItem;
 
-    let finalPrice = baseItem.price;
-    let displayName = baseItem.name;
+    // Resetear checkboxes
+    document.getElementById("customizer-notco").checked = false;
+    document.getElementById("customizer-triple").checked = false;
+    document.getElementById("customizer-cheddar").checked = false;
+    document.getElementById("customizer-panceta").checked = false;
+    document.getElementById("customizer-huevo").checked = false;
+
+    // Mostrar info de la burger
+    burgerCustomizerInfo.innerHTML = `
+        <div style="margin-bottom: 16px;">
+            <h3 style="margin: 0 0 8px 0; color: var(--red); font-size: 1.2rem;">${baseItem.name}</h3>
+            <p style="margin: 0; color: #666; font-size: 0.9rem;">${baseItem.desc}</p>
+        </div>
+    `;
+
+    updateCustomizerPrice();
+    openBurgerCustomizer();
+}
+
+function updateCustomizerPrice() {
+    if (!currentBurgerToCustomize) return;
+
+    const isTriple = document.getElementById("customizer-triple").checked;
+    const isCheddar = document.getElementById("customizer-cheddar").checked;
+    const isPanceta = document.getElementById("customizer-panceta").checked;
+    const isHuevo = document.getElementById("customizer-huevo").checked;
+
+    let price = currentBurgerToCustomize.price;
+    if (isTriple) price += 3000;
+    if (isCheddar) price += 1500;
+    if (isPanceta) price += 1500;
+    if (isHuevo) price += 1500;
+
+    burgerCustomizerPrice.textContent = `Precio: ${formatMoney(price)}`;
+}
+
+function confirmBurgerCustomizer() {
+    if (!currentBurgerToCustomize) return;
+
+    const isNotCo = document.getElementById("customizer-notco").checked;
+    const isTriple = document.getElementById("customizer-triple").checked;
+    const isCheddar = document.getElementById("customizer-cheddar").checked;
+    const isPanceta = document.getElementById("customizer-panceta").checked;
+    const isHuevo = document.getElementById("customizer-huevo").checked;
+
+    let finalPrice = currentBurgerToCustomize.price;
+    let displayName = currentBurgerToCustomize.name;
     const modifiers = [];
 
     if (isNotCo) {
@@ -298,11 +353,38 @@ function addBurger(id) {
     }
 
     addToCart({
-        key: createCartKey(baseItem.id, modifiers),
+        key: createCartKey(currentBurgerToCustomize.id, modifiers),
         name: displayName,
         unitPrice: finalPrice,
-        image: baseItem.image
+        image: currentBurgerToCustomize.image
     });
+
+    closeBurgerCustomizer();
+}
+
+function openBurgerCustomizer() {
+    burgerCustomizerModal.removeAttribute("hidden");
+    document.body.classList.add("no-scroll");
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            burgerCustomizerModal.classList.add("is-open");
+        });
+    });
+}
+
+function closeBurgerCustomizer() {
+    burgerCustomizerModal.classList.remove("is-open");
+    burgerCustomizerModal.addEventListener("transitionend", () => {
+        burgerCustomizerModal.setAttribute("hidden", "");
+        document.body.classList.remove("no-scroll");
+    }, { once: true });
+    currentBurgerToCustomize = null;
+}
+
+function onBurgerCustomizerBackdropClick(event) {
+    if (event.target === burgerCustomizerModal) {
+        closeBurgerCustomizer();
+    }
 }
 
 function addItem(id, type) {

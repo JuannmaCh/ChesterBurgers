@@ -126,6 +126,40 @@
 <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
 <p id="a11y-live" class="sr-only" aria-live="polite"></p>
 
-<script src="app.js"></script>
+<section id="burger-customizer-modal" class="checkout-modal" hidden>
+    <div class="checkout-sheet" role="dialog" aria-modal="true" aria-labelledby="customizer-title">
+        <div class="checkout-header">
+            <h2 id="customizer-title">Personalizar Burger</h2>
+            <button id="close-customizer-btn" class="btn-close" type="button" aria-label="Cerrar personalización">X</button>
+        </div>
+
+        <div id="customizer-content">
+            <div id="customizer-burger-info"></div>
+            <div style="margin: 16px 0; padding: 12px; background: #f9f9f9; border-radius: 6px;">
+                <p style="margin: 0 0 12px 0; font-weight: 600; color: #333; font-size: 0.9rem;">Opciones:</p>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="customizer-notco"> <span>NotCo</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="customizer-triple"> <span>Triple (+$3.000)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="customizer-cheddar"> <span>+ Cheddar (+$1.500)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="customizer-panceta"> <span>+ Panceta (+$1.500)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="customizer-huevo"> <span>+ Huevo (+$1.500)</span>
+                    </label>
+                </div>
+            </div>
+            <div id="customizer-price" style="font-size: 1.2rem; font-weight: 800; color: var(--red); margin: 12px 0;">Precio: $0</div>
+        </div>
+
+        <button id="confirm-customizer-btn" class="btn-order btn-submit-order" type="button">AGREGAR AL CARRITO</button>
+    </div>
+</section>
 </body>
 </html>
