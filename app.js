@@ -62,8 +62,8 @@ const menu = {
         { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, lechuga, tomate, cebolla, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
     ],
     extras: [
-        { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion grande", image: "papas_fritas.avif" },
-        { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 10 unidades", image: "aros_de_cebolla.webp", inStock: false }
+        { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion de 120grs", image: "papas_fritas.avif" },
+        { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 8 unidades", image: "aros_de_cebolla.webp", inStock: false }
     ],
     drinks: [
         { id: 10, name: "Coca Cola", price: 3000, desc: "Lata 354 ml", image: "lata_coca.webp", inStock: false },
@@ -1057,4 +1057,3 @@ function refreshCustomizerOptionLabels() {
             ? `${baseLabel} (+${formatMoney(price)})`
             : baseLabel;
     });
-}
