@@ -197,7 +197,10 @@ function renderBurgers() {
                 ✅ <strong>Todas las burgers vienen con papas incluidas</strong>
             </p>
             <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #666;">
-                💡 Toca ANADIR para personalizar con extras: Cheddar, Panceta o Huevo c/u $1.500
+                💡 Opciones disponibles en todas:
+            </p>
+            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666; margin-left: 16px;">
+                🌱 <strong>NotCo</strong> (veggie) • <strong>Triple</strong> (+$3.000) • <strong>+ Cheddar, Panceta o Huevo</strong> (+$1.500 c/u)
             </p>
         </div>
     `;
