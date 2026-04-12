@@ -7,6 +7,27 @@ const PICKUP_ADDRESS = "Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argent
 const DEFAULT_ITEM_IMAGE = "burger_chester.jpeg";
 const DISCOUNT_PERCENTAGE = 0.1;
 
+const CONFIG_PRICES = {
+    modifiers: {
+        notco: 0,
+        triple: 3000,
+        cheddar: 1500,
+        panceta: 1500,
+        huevo: 1500
+    }
+};
+
+const BURGER_MODIFIER_META = {
+    notco: { inputId: "customizer-notco", displayLabel: "NotCo", nameSuffix: " (NotCo)" },
+    triple: { inputId: "customizer-triple", displayLabel: "Triple", nameSuffix: " (Triple)" },
+    cheddar: { inputId: "customizer-cheddar", displayLabel: "+ Cheddar", nameSuffix: " (+Cheddar)" },
+    panceta: { inputId: "customizer-panceta", displayLabel: "+ Panceta", nameSuffix: " (+Panceta)" },
+    huevo: { inputId: "customizer-huevo", displayLabel: "+ Huevo", nameSuffix: " (+Huevo)" }
+};
+
+const BURGER_MODIFIER_ORDER = ["notco", "triple", "cheddar", "panceta", "huevo"];
+const STREET_AND_NUMBER_REGEX = /^(?=.*[A-Za-z\u00C0-\u024F])(?=.*\d)[A-Za-z\u00C0-\u024F\d\s.,'#\-/]+$/;
+
 const PAYMENT_METHOD_LABELS = {
     efectivo: "Efectivo",
     transferencia: "Transferencia",
@@ -70,6 +91,7 @@ const deliveryAddressFields = document.getElementById("delivery-address-fields")
 const customerStreetNumberInput = document.getElementById("customer-street-number");
 const customerNeighborhoodSelect = document.getElementById("customer-neighborhood");
 const customerBetweenStreetsInput = document.getElementById("customer-between-streets");
+const customerNotesInput = document.getElementById("customer-notes");
 const deliveryZoneSelect = document.getElementById("delivery-zone");
 const paymentMethodSelect = document.getElementById("payment-method");
 const pickupAddressNote = document.getElementById("pickup-address-note");
@@ -133,6 +155,7 @@ function bindEvents() {
         clearFieldError(customerBetweenStreetsInput);
         saveCustomerData();
     });
+    customerNotesInput.addEventListener("input", saveCustomerData);
 
     deliveryZoneSelect.addEventListener("change", () => {
         clearFieldError(deliveryZoneSelect);
@@ -177,7 +200,7 @@ function onDocumentClick(event) {
     }
 
     if (action === "add-item") {
-        addItem(Number(button.dataset.id), button.dataset.type);
+        addItem(Number(button.dataset.id), button.dataset.type, button);
         return;
     }
 
@@ -208,6 +231,8 @@ function render() {
 }
 
 function renderBurgers() {
+    const triplePrice = formatMoney(CONFIG_PRICES.modifiers.triple);
+    const extraModifierPrice = formatMoney(CONFIG_PRICES.modifiers.cheddar);
     const burgersHeader = `
         <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid var(--red);">
             <p style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">
@@ -217,7 +242,7 @@ function renderBurgers() {
                 💡 Opciones disponibles en todas:
             </p>
             <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666; margin-left: 16px;">
-                🌱 <strong>NotCo</strong> (veggie) • <strong>Triple</strong> (+$3.000) • <strong>+ Cheddar, Panceta o Huevo</strong> (+$1.500 c/u)
+                🌱 <strong>NotCo</strong> (veggie) • <strong>Triple</strong> (+${triplePrice}) • <strong>+ Cheddar, Panceta o Huevo</strong> (+${extraModifierPrice} c/u)
             </p>
         </div>
     `;
@@ -295,11 +320,12 @@ function addBurger(id) {
     currentBurgerToCustomize = baseItem;
 
     // Resetear checkboxes
-    document.getElementById("customizer-notco").checked = false;
-    document.getElementById("customizer-triple").checked = false;
-    document.getElementById("customizer-cheddar").checked = false;
-    document.getElementById("customizer-panceta").checked = false;
-    document.getElementById("customizer-huevo").checked = false;
+    BURGER_MODIFIER_ORDER.forEach((modifierKey) => {
+        const checkbox = getModifierCheckbox(modifierKey);
+        if (checkbox) checkbox.checked = false;
+    });
+
+    refreshCustomizerOptionLabels();
 
     // Mostrar info de la burger
     burgerCustomizerInfo.innerHTML = `
@@ -316,16 +342,8 @@ function addBurger(id) {
 function updateCustomizerPrice() {
     if (!currentBurgerToCustomize) return;
 
-    const isTriple = document.getElementById("customizer-triple").checked;
-    const isCheddar = document.getElementById("customizer-cheddar").checked;
-    const isPanceta = document.getElementById("customizer-panceta").checked;
-    const isHuevo = document.getElementById("customizer-huevo").checked;
-
-    let price = currentBurgerToCustomize.price;
-    if (isTriple) price += 3000;
-    if (isCheddar) price += 1500;
-    if (isPanceta) price += 1500;
-    if (isHuevo) price += 1500;
+    const selectedModifiers = getSelectedBurgerModifiers();
+    const price = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, selectedModifiers);
 
     burgerCustomizerPrice.textContent = `Precio: ${formatMoney(price)}`;
 }
@@ -333,44 +351,9 @@ function updateCustomizerPrice() {
 function confirmBurgerCustomizer() {
     if (!currentBurgerToCustomize) return;
 
-    const isNotCo = document.getElementById("customizer-notco").checked;
-    const isTriple = document.getElementById("customizer-triple").checked;
-    const isCheddar = document.getElementById("customizer-cheddar").checked;
-    const isPanceta = document.getElementById("customizer-panceta").checked;
-    const isHuevo = document.getElementById("customizer-huevo").checked;
-
-    let finalPrice = currentBurgerToCustomize.price;
-    let displayName = currentBurgerToCustomize.name;
-    const modifiers = [];
-
-    if (isNotCo) {
-        displayName += " (NotCo)";
-        modifiers.push("notco");
-    }
-
-    if (isTriple) {
-        finalPrice += 3000;
-        displayName += " (Triple)";
-        modifiers.push("triple");
-    }
-
-    if (isCheddar) {
-        finalPrice += 1500;
-        displayName += " (+Cheddar)";
-        modifiers.push("cheddar");
-    }
-
-    if (isPanceta) {
-        finalPrice += 1500;
-        displayName += " (+Panceta)";
-        modifiers.push("panceta");
-    }
-
-    if (isHuevo) {
-        finalPrice += 1500;
-        displayName += " (+Huevo)";
-        modifiers.push("huevo");
-    }
+    const modifiers = getSelectedBurgerModifiers();
+    const finalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, modifiers);
+    const displayName = buildCustomizedBurgerName(currentBurgerToCustomize.name, modifiers);
 
     addToCart({
         key: createCartKey(currentBurgerToCustomize.id, modifiers),
@@ -407,7 +390,7 @@ function onBurgerCustomizerBackdropClick(event) {
     }
 }
 
-function addItem(id, type) {
+function addItem(id, type, button) {
     const source = type === "extras-list" ? menu.extras : menu.drinks;
     const item = source.find((current) => current.id === id);
     if (!item) return;
@@ -423,6 +406,25 @@ function addItem(id, type) {
         unitPrice: item.price,
         image: item.image
     });
+
+    provideAddButtonFeedback(button);
+}
+
+function provideAddButtonFeedback(button) {
+    if (!button || button.disabled) return;
+
+    const originalText = button.dataset.originalText || button.textContent;
+    button.dataset.originalText = originalText;
+    button.textContent = "!LISTO!";
+    button.classList.add("is-confirmed");
+    button.disabled = true;
+
+    clearTimeout(button._feedbackTimeoutId);
+    button._feedbackTimeoutId = setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove("is-confirmed");
+        button.disabled = false;
+    }, 650);
 }
 
 function addToCart({ key, name, unitPrice, image = "" }) {
@@ -565,7 +567,8 @@ function getCartItemCount() {
 }
 
 function createCartKey(baseId, modifiers) {
-    return `${baseId}-${modifiers.join("-") || "base"}`;
+    const normalizedModifiers = [...modifiers].filter(Boolean).sort();
+    return `${baseId}-${normalizedModifiers.join("-") || "base"}`;
 }
 
 function formatMoney(value) {
@@ -596,6 +599,7 @@ function sendOrder() {
     const streetNumber = customerStreetNumberInput.value.trim();
     const neighborhood = customerNeighborhoodSelect.value;
     const betweenStreets = customerBetweenStreetsInput.value.trim();
+    const notes = customerNotesInput.value.trim();
     const orderAddress = isPickup
         ? PICKUP_ADDRESS
         : formatDeliveryAddress(streetNumber, neighborhood, betweenStreets);
@@ -609,6 +613,10 @@ function sendOrder() {
         `Metodo de pago: ${formatPaymentMethod(summary.paymentMethod)}`,
         ""
     ];
+
+    if (notes) {
+        lines.splice(lines.length - 1, 0, `Aclaraciones: ${notes}`);
+    }
 
     cart.forEach((item) => {
         const itemSubtotal = item.unitPrice * item.qty;
@@ -722,9 +730,9 @@ function validateCheckout() {
         return true;
     }
 
-    if (streetNumber.length < 5) {
+    if (!STREET_AND_NUMBER_REGEX.test(streetNumber)) {
         markFieldInvalid(customerStreetNumberInput);
-        showFeedback("Ingresa calle y numero para continuar");
+        showFeedback("Ingresa una direccion valida (calle y numero)");
         customerStreetNumberInput.focus();
         return false;
     }
@@ -753,7 +761,8 @@ function getCheckoutFields() {
         paymentMethodSelect,
         customerStreetNumberInput,
         customerNeighborhoodSelect,
-        customerBetweenStreetsInput
+        customerBetweenStreetsInput,
+        customerNotesInput
     ];
 }
 
@@ -839,6 +848,7 @@ function saveCustomerData() {
         streetNumber,
         neighborhood,
         betweenStreets,
+        notes: customerNotesInput.value.trim(),
         address: formatDeliveryAddress(streetNumber, neighborhood, betweenStreets),
         zone: deliveryZoneSelect.value,
         paymentMethod: paymentMethodSelect.value
@@ -871,6 +881,10 @@ function hydrateCustomerData() {
 
         if (typeof data.betweenStreets === "string") {
             customerBetweenStreetsInput.value = data.betweenStreets;
+        }
+
+        if (typeof data.notes === "string") {
+            customerNotesInput.value = data.notes;
         }
 
         if (typeof data.zone === "string" && SHIPPING_ZONES[data.zone]) {
@@ -925,3 +939,43 @@ function updateDeliveryModeUI() {
         clearFieldError(customerBetweenStreetsInput);
     }
 }
+
+function getModifierCheckbox(modifierKey) {
+    const modifierConfig = BURGER_MODIFIER_META[modifierKey];
+    if (!modifierConfig) return null;
+    return document.getElementById(modifierConfig.inputId);
+}
+
+function getSelectedBurgerModifiers() {
+    return BURGER_MODIFIER_ORDER.filter((modifierKey) => {
+        const checkbox = getModifierCheckbox(modifierKey);
+        return checkbox?.checked;
+    });
+}
+
+function calculateCustomizedBurgerPrice(basePrice, modifiers) {
+    return modifiers.reduce((acc, modifierKey) => {
+        return acc + (CONFIG_PRICES.modifiers[modifierKey] || 0);
+    }, basePrice);
+}
+
+function buildCustomizedBurgerName(baseName, modifiers) {
+    return modifiers.reduce((acc, modifierKey) => {
+        const suffix = BURGER_MODIFIER_META[modifierKey]?.nameSuffix || "";
+        return `${acc}${suffix}`;
+    }, baseName);
+}
+
+function refreshCustomizerOptionLabels() {
+    BURGER_MODIFIER_ORDER.forEach((modifierKey) => {
+        const label = document.querySelector(`[data-modifier-label="${modifierKey}"]`);
+        if (!label) return;
+
+        const price = CONFIG_PRICES.modifiers[modifierKey] || 0;
+        const baseLabel = BURGER_MODIFIER_META[modifierKey]?.displayLabel || modifierKey;
+        label.textContent = price > 0
+            ? `${baseLabel} (+${formatMoney(price)})`
+            : baseLabel;
+    });
+}
+

@@ -248,6 +248,7 @@
                 <div class="t-row"><span class="t-label">Dirección:</span><span class="t-value" id="t-direccion">-</span></div>
                 <div class="t-row"><span class="t-label">Zona:</span><span class="t-value" id="t-zona">-</span></div>
                 <div class="t-row"><span class="t-label">Pago:</span><span class="t-value" id="t-pago">-</span></div>
+                <div class="t-row" id="t-aclaraciones-row" style="display: none;"><span class="t-label">Aclaraciones:</span><span class="t-value" id="t-aclaraciones">-</span></div>
             </div>
 
             <div class="t-section">
@@ -281,6 +282,7 @@
         function generateTicket() {
             const input = document.getElementById('whatsapp-input').value.trim();
             if (!input) return alert("Pega el mensaje de WhatsApp primero.");
+            const lines = input.split('\n').map((line) => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
 
             // Fecha y hora actuales
             const now = new Date();
@@ -288,57 +290,62 @@
             document.getElementById('t-time').innerText = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
             // Parsear info del cliente
-            const get = (label) => {
-                const m = input.match(new RegExp(label + ':\\s*(.+)'));
-                return m ? m[1].trim() : '-';
-            };
-            const getAny = (labels) => {
-                for (const label of labels) {
-                    const value = get(label);
-                    if (value !== '-') return value;
+            const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const getFieldValue = (labels) => {
+                for (const line of lines) {
+                    for (const label of labels) {
+                        const pattern = new RegExp(`^${escapeRegex(label)}\\s*:\\s*(.+)$`, 'i');
+                        const match = line.match(pattern);
+                        if (match) {
+                            return match[1].trim();
+                        }
+                    }
                 }
                 return '-';
             };
 
-            document.getElementById('t-cliente').innerText   = get('Cliente');
-            document.getElementById('t-direccion').innerText = getAny(['Direccion', 'Take away en']);
-            document.getElementById('t-zona').innerText      = get('Zona');
-            document.getElementById('t-pago').innerText      = get('Metodo de pago');
+            document.getElementById('t-cliente').innerText = getFieldValue(['Cliente']);
+            document.getElementById('t-direccion').innerText = getFieldValue(['Dirección', 'Direccion', 'Take away en']);
+            document.getElementById('t-zona').innerText = getFieldValue(['Zona']);
+            document.getElementById('t-pago').innerText = getFieldValue(['Método de pago', 'Metodo de pago']);
+
+            const notes = getFieldValue(['Aclaraciones']);
+            const notesRow = document.getElementById('t-aclaraciones-row');
+            if (notes !== '-') {
+                document.getElementById('t-aclaraciones').innerText = notes;
+                notesRow.style.display = 'flex';
+            } else {
+                notesRow.style.display = 'none';
+            }
 
             // Parsear ítems: "- 1 x Criolla ($ 14.000) = $ 14.000"
             const tBody = document.getElementById('t-body');
             tBody.innerHTML = '';
 
-            const lines = input.split('\n');
             let subtotal = '-', envio = '-', total = '-', descuento = null;
 
             lines.forEach(line => {
                 const normalizedLine = line.trim();
-                // Formato actual: - 1 x Criolla (NotCo) (Triple) ($ 17.000) = $ 17.000
-                let itemMatch = normalizedLine.match(/^\-\s*(\d+)\s*x\s+(.+)\s+\(([^()]*)\)\s*=\s*(.+)$/);
-
-                // Fallback para formatos mas viejos sin el bloque final de subtotal
-                if (!itemMatch) {
-                    itemMatch = normalizedLine.match(/^\-\s*(\d+)\s*x\s+(.+?)\s*\(/);
-                }
+                let itemMatch = normalizedLine.match(/^\s*-\s*(\d+)\s*x\s*(.+?)(?:\s*=\s*.+)?$/i);
 
                 if (itemMatch) {
+                    const cleanName = itemMatch[2].replace(/\(\s*\$[^)]*\)\s*$/i, '').trim();
                     tBody.innerHTML += `<tr>
                         <td class="td-qty">${itemMatch[1]}</td>
-                        <td class="td-name">${itemMatch[2].trim()}</td>
+                        <td class="td-name">${cleanName}</td>
                     </tr>`;
                 }
 
-                if (/SUBTOTAL:/i.test(normalizedLine)) {
+                if (/^SUBTOTAL\s*:/i.test(normalizedLine)) {
                     subtotal = normalizedLine.split(/:(.+)/)[1].trim();
                 }
-                if (/^ENVIO:/i.test(normalizedLine)) {
+                if (/^ENVI[OÓ]\s*:/i.test(normalizedLine)) {
                     envio = normalizedLine.split(/:(.+)/)[1].trim();
                 }
-                if (/^DESCUENTO/i.test(normalizedLine)) {
+                if (/^DESCUENTO\b/i.test(normalizedLine)) {
                     descuento = normalizedLine.split(/:(.+)/)[1].trim();
                 }
-                if (/TOTAL FINAL:/i.test(normalizedLine)) {
+                if (/^TOTAL\s+FINAL\s*:/i.test(normalizedLine)) {
                     total = normalizedLine.split(/:(.+)/)[1].trim();
                 }
             });
@@ -356,10 +363,18 @@
 
             // Renderizar a PNG con html2canvas
             const ticketEl = document.getElementById('ticket');
+            const fullWidth = ticketEl.scrollWidth;
+            const fullHeight = ticketEl.scrollHeight;
             html2canvas(ticketEl, {
                 scale: 2,
                 backgroundColor: '#ffffff',
-                useCORS: true
+                useCORS: true,
+                width: fullWidth,
+                height: fullHeight,
+                windowWidth: fullWidth,
+                windowHeight: fullHeight,
+                scrollX: 0,
+                scrollY: 0
             }).then(canvas => {
                 ticketDataURL = canvas.toDataURL('image/png');
                 document.getElementById('ticket-image').src = ticketDataURL;

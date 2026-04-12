@@ -115,6 +115,9 @@
             <a href="https://maps.app.goo.gl/WkR2AVwVvyQ6uB3u5" target="_blank" rel="noopener noreferrer">Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina</a>
         </p>
 
+        <label class="form-label" for="customer-notes">Aclaraciones (opcional)</label>
+        <textarea id="customer-notes" class="form-input form-textarea" rows="3" placeholder="Ej: sin cebolla, el timbre no anda"></textarea>
+
         <div class="checkout-totals" aria-live="polite">
             <div>Subtotal: <span id="subtotal-price">$0</span></div>
             <div>Envio: <span id="shipping-price">$0</span></div>
@@ -150,19 +153,19 @@
                 <p style="margin: 0 0 12px 0; font-weight: 600; color: #333; font-size: 0.9rem;">Opciones:</p>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="customizer-notco"> <span>NotCo</span>
+                        <input type="checkbox" id="customizer-notco"> <span data-modifier-label="notco">NotCo</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="customizer-triple"> <span>Triple (+$3.000)</span>
+                        <input type="checkbox" id="customizer-triple"> <span data-modifier-label="triple">Triple (+$3.000)</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="customizer-cheddar"> <span>+ Cheddar (+$1.500)</span>
+                        <input type="checkbox" id="customizer-cheddar"> <span data-modifier-label="cheddar">+ Cheddar (+$1.500)</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="customizer-panceta"> <span>+ Panceta (+$1.500)</span>
+                        <input type="checkbox" id="customizer-panceta"> <span data-modifier-label="panceta">+ Panceta (+$1.500)</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="customizer-huevo"> <span>+ Huevo (+$1.500)</span>
+                        <input type="checkbox" id="customizer-huevo"> <span data-modifier-label="huevo">+ Huevo (+$1.500)</span>
                     </label>
                 </div>
             </div>

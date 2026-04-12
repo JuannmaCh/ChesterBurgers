@@ -191,6 +191,12 @@ h2 {
     cursor: not-allowed;
 }
 
+.btn-add.is-confirmed,
+.btn-add.is-confirmed:disabled {
+    background: #1f7a2e;
+    color: #ffffff;
+}
+
 .stock-badge {
     display: inline-block;
     margin-top: 6px;
@@ -357,6 +363,11 @@ h2 {
     font-size: 1rem;
     color: var(--text);
     background: #ffffff;
+}
+
+.form-textarea {
+    min-height: 92px;
+    resize: vertical;
 }
 
 .form-input.is-invalid,
