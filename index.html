@@ -102,6 +102,14 @@
             <option value="sur">Zona 3 (5 a 7 km) - $4000</option>
             <option value="retiro">Take away (sin costo)</option>
         </select>
+
+        <label class="form-label" for="payment-method">Metodo de pago</label>
+        <select id="payment-method" class="form-select">
+            <option value="">Selecciona un metodo</option>
+            <option value="efectivo">Efectivo (10% OFF)</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="tarjeta">Tarjeta</option>
+        </select>
         <p id="pickup-address-note" class="form-label" hidden>
             Take away en:
             <a href="https://maps.app.goo.gl/WkR2AVwVvyQ6uB3u5" target="_blank" rel="noopener noreferrer">Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina</a>
@@ -110,6 +118,9 @@
         <div class="checkout-totals" aria-live="polite">
             <div>Subtotal: <span id="subtotal-price">$0</span></div>
             <div>Envio: <span id="shipping-price">$0</span></div>
+            <div id="discount-row" class="discount-row" hidden>
+                <span id="discount-label">Descuento</span>: <span id="discount-price">$0</span>
+            </div>
             <div class="checkout-grand-total">Total final: <span id="grand-total-price">$0</span></div>
         </div>
 

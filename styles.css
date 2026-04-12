@@ -381,6 +381,11 @@ h2 {
     font-weight: bold;
 }
 
+.discount-row {
+    color: #1f7a2e;
+    font-weight: bold;
+}
+
 .checkout-detail {
     margin-top: 12px;
     border-top: 1px dashed #bbbbbb;

@@ -5,6 +5,13 @@ const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const WHATSAPP_PHONE = "5491124031761";
 const PICKUP_ADDRESS = "Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina";
 const DEFAULT_ITEM_IMAGE = "burger_chester.jpeg";
+const DISCOUNT_PERCENTAGE = 0.1;
+
+const PAYMENT_METHOD_LABELS = {
+    efectivo: "Efectivo",
+    transferencia: "Transferencia",
+    tarjeta: "Tarjeta"
+};
 
 const SHIPPING_ZONES = {
     centro: { label: "Zona 1 (0 a 3 km)", price: 1000 },
@@ -64,7 +71,11 @@ const customerStreetNumberInput = document.getElementById("customer-street-numbe
 const customerNeighborhoodSelect = document.getElementById("customer-neighborhood");
 const customerBetweenStreetsInput = document.getElementById("customer-between-streets");
 const deliveryZoneSelect = document.getElementById("delivery-zone");
+const paymentMethodSelect = document.getElementById("payment-method");
 const pickupAddressNote = document.getElementById("pickup-address-note");
+const discountRow = document.getElementById("discount-row");
+const discountLabel = document.getElementById("discount-label");
+const discountPrice = document.getElementById("discount-price");
 const checkoutModal = document.getElementById("checkout-modal");
 const closeCheckoutBtn = document.getElementById("close-checkout-btn");
 const submitOrderBtn = document.getElementById("submit-order-btn");
@@ -128,6 +139,12 @@ function bindEvents() {
         saveCustomerData();
         updateTotals();
         updateDeliveryModeUI();
+    });
+
+    paymentMethodSelect.addEventListener("change", () => {
+        clearFieldError(paymentMethodSelect);
+        saveCustomerData();
+        updateTotals();
     });
 }
 
@@ -457,16 +474,24 @@ function persistAndRefresh(statusMessage) {
 }
 
 function updateTotals() {
-    const subtotal = getCartSubtotal();
-    const shipping = getShippingCost();
-    const total = subtotal + shipping;
+    const summary = calculateOrderSummary();
 
-    subtotalPrice.textContent = formatMoney(subtotal);
-    shippingPrice.textContent = formatMoney(shipping);
-    grandTotalPrice.textContent = formatMoney(total);
-    checkoutDetailSubtotal.textContent = formatMoney(subtotal);
+    subtotalPrice.textContent = formatMoney(summary.subtotal);
+    shippingPrice.textContent = formatMoney(summary.shipping);
+    grandTotalPrice.textContent = formatMoney(summary.total);
+    checkoutDetailSubtotal.textContent = formatMoney(summary.subtotal);
 
-    totalPrice.textContent = formatMoney(total);
+    if (summary.discount > 0) {
+        discountLabel.textContent = `Descuento (${summary.discountReason})`;
+        discountPrice.textContent = `- ${formatMoney(summary.discount)}`;
+        discountRow.hidden = false;
+    } else {
+        discountLabel.textContent = "Descuento";
+        discountPrice.textContent = formatMoney(0);
+        discountRow.hidden = true;
+    }
+
+    totalPrice.textContent = formatMoney(summary.total);
     cartCount.textContent = getCartItemCount();
 
     renderCheckoutDetail();
@@ -488,6 +513,47 @@ function getShippingCost() {
     const zone = deliveryZoneSelect.value;
     if (!zone || !SHIPPING_ZONES[zone]) return 0;
     return SHIPPING_ZONES[zone].price;
+}
+
+function getDiscountInfo(subtotal, zoneCode, paymentMethod) {
+    if (subtotal <= 0) {
+        return { amount: 0, reason: "" };
+    }
+
+    // No acumulable: take away tiene prioridad sobre descuento por efectivo.
+    if (zoneCode === "retiro") {
+        return {
+            amount: Math.round(subtotal * DISCOUNT_PERCENTAGE),
+            reason: "10% por take away"
+        };
+    }
+
+    if (paymentMethod === "efectivo") {
+        return {
+            amount: Math.round(subtotal * DISCOUNT_PERCENTAGE),
+            reason: "10% por efectivo"
+        };
+    }
+
+    return { amount: 0, reason: "" };
+}
+
+function calculateOrderSummary() {
+    const subtotal = getCartSubtotal();
+    const zoneCode = deliveryZoneSelect.value;
+    const shipping = getShippingCost();
+    const paymentMethod = paymentMethodSelect.value;
+    const discountInfo = getDiscountInfo(subtotal, zoneCode, paymentMethod);
+    const total = Math.max(0, subtotal + shipping - discountInfo.amount);
+
+    return {
+        subtotal,
+        shipping,
+        discount: discountInfo.amount,
+        discountReason: discountInfo.reason,
+        paymentMethod,
+        total
+    };
 }
 
 function getCartSubtotal() {
@@ -525,9 +591,7 @@ function sendOrder() {
 
     const zoneCode = deliveryZoneSelect.value;
     const zoneData = SHIPPING_ZONES[zoneCode];
-    const subtotal = getCartSubtotal();
-    const shipping = zoneData.price;
-    const total = subtotal + shipping;
+    const summary = calculateOrderSummary();
     const isPickup = zoneCode === "retiro";
     const streetNumber = customerStreetNumberInput.value.trim();
     const neighborhood = customerNeighborhoodSelect.value;
@@ -542,6 +606,7 @@ function sendOrder() {
         `Cliente: ${customerNameInput.value.trim()}`,
         `${isPickup ? "Take away en" : "Direccion"}: ${orderAddress}`,
         `Zona: ${zoneData.label}`,
+        `Metodo de pago: ${formatPaymentMethod(summary.paymentMethod)}`,
         ""
     ];
 
@@ -552,10 +617,15 @@ function sendOrder() {
 
     lines.push(
         "",
-        `SUBTOTAL: ${formatMoney(subtotal)}`,
-        `ENVIO: ${formatMoney(shipping)}`,
-        `TOTAL FINAL: ${formatMoney(total)}`
+        `SUBTOTAL: ${formatMoney(summary.subtotal)}`,
+        `ENVIO: ${formatMoney(summary.shipping)}`
     );
+
+    if (summary.discount > 0) {
+        lines.push(`DESCUENTO (${summary.discountReason}): - ${formatMoney(summary.discount)}`);
+    }
+
+    lines.push(`TOTAL FINAL: ${formatMoney(summary.total)}`);
 
     const encodedMessage = encodeURIComponent(lines.join("\n"));
     const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodedMessage}`;
@@ -625,6 +695,7 @@ function validateCheckout() {
     const neighborhood = customerNeighborhoodSelect.value;
     const betweenStreets = customerBetweenStreetsInput.value.trim();
     const zone = deliveryZoneSelect.value;
+    const paymentMethod = paymentMethodSelect.value;
 
     if (name.length < 2) {
         markFieldInvalid(customerNameInput);
@@ -637,6 +708,13 @@ function validateCheckout() {
         markFieldInvalid(deliveryZoneSelect);
         showFeedback("Selecciona tu zona para calcular envio");
         deliveryZoneSelect.focus();
+        return false;
+    }
+
+    if (!paymentMethod || !PAYMENT_METHOD_LABELS[paymentMethod]) {
+        markFieldInvalid(paymentMethodSelect);
+        showFeedback("Selecciona un metodo de pago para continuar");
+        paymentMethodSelect.focus();
         return false;
     }
 
@@ -672,6 +750,7 @@ function getCheckoutFields() {
     return [
         customerNameInput,
         deliveryZoneSelect,
+        paymentMethodSelect,
         customerStreetNumberInput,
         customerNeighborhoodSelect,
         customerBetweenStreetsInput
@@ -761,7 +840,8 @@ function saveCustomerData() {
         neighborhood,
         betweenStreets,
         address: formatDeliveryAddress(streetNumber, neighborhood, betweenStreets),
-        zone: deliveryZoneSelect.value
+        zone: deliveryZoneSelect.value,
+        paymentMethod: paymentMethodSelect.value
     };
 
     localStorage.setItem(CUSTOMER_STORAGE_KEY, JSON.stringify(data));
@@ -796,9 +876,17 @@ function hydrateCustomerData() {
         if (typeof data.zone === "string" && SHIPPING_ZONES[data.zone]) {
             deliveryZoneSelect.value = data.zone;
         }
+
+        if (typeof data.paymentMethod === "string" && PAYMENT_METHOD_LABELS[data.paymentMethod]) {
+            paymentMethodSelect.value = data.paymentMethod;
+        }
     } catch (error) {
         return;
     }
+}
+
+function formatPaymentMethod(paymentMethod) {
+    return PAYMENT_METHOD_LABELS[paymentMethod] || "Sin especificar";
 }
 
 function announce(message) {

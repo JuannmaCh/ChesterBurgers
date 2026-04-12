@@ -247,6 +247,7 @@
                 <div class="t-row"><span class="t-label">Cliente:</span><span class="t-value" id="t-cliente">-</span></div>
                 <div class="t-row"><span class="t-label">Dirección:</span><span class="t-value" id="t-direccion">-</span></div>
                 <div class="t-row"><span class="t-label">Zona:</span><span class="t-value" id="t-zona">-</span></div>
+                <div class="t-row"><span class="t-label">Pago:</span><span class="t-value" id="t-pago">-</span></div>
             </div>
 
             <div class="t-section">
@@ -264,6 +265,7 @@
             <div class="t-totals">
                 <div class="t-row"><span>Subtotal:</span><span id="t-subtotal">-</span></div>
                 <div class="t-row"><span>Envío:</span><span id="t-envio">-</span></div>
+                <div class="t-row" id="t-discount-row" style="display: none;"><span>Descuento:</span><span id="t-descuento">-</span></div>
                 <div class="t-grand-total">
                     <span>TOTAL:</span><span id="t-total">-</span>
                 </div>
@@ -290,16 +292,25 @@
                 const m = input.match(new RegExp(label + ':\\s*(.+)'));
                 return m ? m[1].trim() : '-';
             };
-            document.getElementById('t-cliente').innerText    = get('Cliente');
-            document.getElementById('t-direccion').innerText  = get('Direccion');
-            document.getElementById('t-zona').innerText       = get('Zona');
+            const getAny = (labels) => {
+                for (const label of labels) {
+                    const value = get(label);
+                    if (value !== '-') return value;
+                }
+                return '-';
+            };
+
+            document.getElementById('t-cliente').innerText   = get('Cliente');
+            document.getElementById('t-direccion').innerText = getAny(['Direccion', 'Take away en']);
+            document.getElementById('t-zona').innerText      = get('Zona');
+            document.getElementById('t-pago').innerText      = get('Metodo de pago');
 
             // Parsear ítems: "- 1 x Criolla ($ 14.000) = $ 14.000"
             const tBody = document.getElementById('t-body');
             tBody.innerHTML = '';
 
             const lines = input.split('\n');
-            let subtotal = '-', envio = '-', total = '-';
+            let subtotal = '-', envio = '-', total = '-', descuento = null;
 
             lines.forEach(line => {
                 const normalizedLine = line.trim();
@@ -324,6 +335,9 @@
                 if (/^ENVIO:/i.test(normalizedLine)) {
                     envio = normalizedLine.split(/:(.+)/)[1].trim();
                 }
+                if (/^DESCUENTO/i.test(normalizedLine)) {
+                    descuento = normalizedLine.split(/:(.+)/)[1].trim();
+                }
                 if (/TOTAL FINAL:/i.test(normalizedLine)) {
                     total = normalizedLine.split(/:(.+)/)[1].trim();
                 }
@@ -331,6 +345,13 @@
 
             document.getElementById('t-subtotal').innerText = subtotal;
             document.getElementById('t-envio').innerText    = envio;
+            const discountRow = document.getElementById('t-discount-row');
+            if (descuento) {
+                document.getElementById('t-descuento').innerText = descuento;
+                discountRow.style.display = 'flex';
+            } else {
+                discountRow.style.display = 'none';
+            }
             document.getElementById('t-total').innerText    = total;
 
             // Renderizar a PNG con html2canvas
