@@ -102,6 +102,10 @@ h2 {
 }
 
 .item-card.is-out-of-stock {
+    /* Evita desvanecer imagenes con transparencia */
+}
+
+.item-card.is-out-of-stock .item-details {
     opacity: 0.85;
 }
 
@@ -112,7 +116,7 @@ h2 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: #eeeeee;
+    background-color: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
