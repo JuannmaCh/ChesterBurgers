@@ -49,6 +49,9 @@ const currencyFormatter = new Intl.NumberFormat(LOCALE, {
 });
 
 const menu = {
+    burgerOfMonth: [
+        { id: 14, name: "Pulled Pork", price: 14000, desc: "Doble medallón 90grs, cerdo desmenuzado en barbacoa (pulled pork), cebolla morada y cheddar con pan de kalis", image: "burger_chester.jpeg" }
+    ],
     burgers: [
         { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon 90grs y doble cheddar con pan de kalis", image: "burger_chester.jpeg" },
         { id: 2, name: "Cheese & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar y panceta con pan de kalis", image: "burger_chester.jpeg" },
@@ -72,6 +75,7 @@ const menu = {
 
 let cart = loadCart();
 
+const burgerMonthList = document.getElementById("burger-month-list");
 const burgersList = document.getElementById("burgers-list");
 const extrasList = document.getElementById("extras-list");
 const drinksList = document.getElementById("drinks-list");
@@ -237,14 +241,31 @@ function onDocumentClick(event) {
 }
 
 function render() {
+    renderBurgerOfMonth();
     renderBurgers();
     renderSimple(menu.extras, extrasList, "EXTRA", "extras-list");
 
-    // Las gaseosas quedan desactivadas temporalmente si su seccion no esta en HTML.
     if (drinksList) {
         renderSimple(menu.drinks, drinksList, "DRINK", "drinks-list");
     }
     renderCart();
+}
+
+function renderBurgerOfMonth() {
+    if (!burgerMonthList) return;
+
+    burgerMonthList.innerHTML = menu.burgerOfMonth.map((item) => `
+        <article class="item-card" style="border: 2px solid var(--yellow); padding: 15px; border-radius: 8px; background: rgba(255, 209, 59, 0.05);">
+            <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
+            <div class="item-details">
+                <span style="background: var(--yellow); color: var(--red); padding: 2px 8px; font-weight: 800; font-size: 0.75rem; border-radius: 4px; text-transform: uppercase;">Estrella del Mes</span>
+                <h3>${item.name}</h3>
+                <p>${item.desc}</p>
+                <div class="price-tag">${formatMoney(item.price)}</div>
+            </div>
+            <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}">ANADIR</button>
+        </article>
+    `).join("");
 }
 
 function renderBurgers() {
@@ -331,12 +352,13 @@ function renderCart() {
 }
 
 function addBurger(id) {
-    const baseItem = menu.burgers.find((burger) => burger.id === id);
+    // Buscamos en ambas listas para soporte de Burger del Mes
+    const allBurgers = [...menu.burgerOfMonth, ...menu.burgers];
+    const baseItem = allBurgers.find((burger) => burger.id === id);
     if (!baseItem) return;
 
     currentBurgerToCustomize = baseItem;
 
-    // Resetear checkboxes
     BURGER_MODIFIER_ORDER.forEach((modifierKey) => {
         const checkbox = getModifierCheckbox(modifierKey);
         if (checkbox) checkbox.checked = false;
@@ -344,7 +366,6 @@ function addBurger(id) {
 
     refreshCustomizerOptionLabels();
 
-    // Mostrar info de la burger
     burgerCustomizerInfo.innerHTML = `
         <div style="margin-bottom: 16px;">
             <h3 style="margin: 0 0 8px 0; color: var(--red); font-size: 1.2rem;">${baseItem.name}</h3>
@@ -582,7 +603,6 @@ function getDiscountInfo(subtotal, zoneCode, paymentMethod) {
         return { amount: 0, reason: "" };
     }
 
-    // No acumulable: take away tiene prioridad sobre descuento por efectivo.
     if (zoneCode === "retiro") {
         return {
             amount: Math.round(subtotal * DISCOUNT_PERCENTAGE),
@@ -877,7 +897,7 @@ function getItemImageFromKey(key) {
     const baseId = Number(String(key).split("-")[0]);
     if (!Number.isFinite(baseId)) return "";
 
-    const allItems = [...menu.burgers, ...menu.extras, ...menu.drinks];
+    const allItems = [...menu.burgerOfMonth, ...menu.burgers, ...menu.extras, ...menu.drinks];
     const matched = allItems.find((item) => item.id === baseId);
     return matched?.image || "";
 }
@@ -1038,4 +1058,3 @@ function refreshCustomizerOptionLabels() {
             : baseLabel;
     });
 }
-
