@@ -4,6 +4,7 @@ const CART_STORAGE_KEY = "chester-cart-v1";
 const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const WHATSAPP_PHONE = "5491124031761";
 const PICKUP_ADDRESS = "Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina";
+const DEFAULT_ITEM_IMAGE = "burger_chester.jpeg";
 
 const SHIPPING_ZONES = {
     centro: { label: "Zona 1 (0 a 3 km)", price: 1000 },
@@ -158,7 +159,7 @@ function render() {
 function renderBurgers() {
     burgersList.innerHTML = menu.burgers.map((item) => `
         <article class="item-card">
-            <div class="item-img" aria-hidden="true"></div>
+            <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
@@ -175,7 +176,7 @@ function renderBurgers() {
 
 function renderSimple(list, container, label, type) {
     container.innerHTML = list.map((item) => {
-        const imgStyle = item.image ? ` style="background-image: url('${item.image}')"` : "";
+        const imgStyle = item.image ? ` style="background-image: url('${resolveAssetPath(item.image)}')"` : "";
         const isOutOfStock = item.inStock === false;
         const cardClass = isOutOfStock ? "item-card is-out-of-stock" : "item-card";
         const stockBadge = isOutOfStock ? '<span class="stock-badge" aria-label="Sin stock">SIN STOCK</span>' : "";
@@ -201,11 +202,13 @@ function renderCart() {
     } else {
         cartItems.innerHTML = cart.map((item) => {
             const subtotal = item.unitPrice * item.qty;
-            const thumbStyle = item.image ? ` style="background-image: url('${item.image}')"` : "";
+            const imageSrc = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
             return `
                 <div class="cart-row">
                     <div class="cart-item-main">
-                        <div class="cart-item-thumb"${thumbStyle} aria-hidden="true"></div>
+                        <div class="cart-item-thumb" aria-hidden="true">
+                            <img class="cart-item-thumb-img" src="${imageSrc}" alt="" loading="lazy" decoding="async">
+                        </div>
                         <div class="cart-item-name">${item.name}</div>
                     </div>
                     <div class="cart-controls">
@@ -274,14 +277,15 @@ function addItem(id, type) {
 
 function addToCart({ key, name, unitPrice, image = "" }) {
     const existingItem = cart.find((item) => item.key === key);
+    const safeImage = image || getItemImageFromKey(key) || DEFAULT_ITEM_IMAGE;
 
     if (existingItem) {
         existingItem.qty += 1;
-        if (!existingItem.image && image) {
-            existingItem.image = image;
+        if (!existingItem.image) {
+            existingItem.image = safeImage;
         }
     } else {
-        cart.push({ key, name, unitPrice, qty: 1, image });
+        cart.push({ key, name, unitPrice, qty: 1, image: safeImage });
     }
 
     persistAndRefresh(`${name} agregado al carrito`);
@@ -534,18 +538,48 @@ function loadCart() {
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [];
 
-        return parsed.filter((item) => {
-            return item
-                && typeof item.key === "string"
-                && typeof item.name === "string"
-                && Number.isFinite(item.unitPrice)
-                && Number.isFinite(item.qty)
-                && (item.image === undefined || typeof item.image === "string")
-                && item.qty > 0;
-        });
+        return parsed
+            .filter((item) => {
+                return item
+                    && typeof item.key === "string"
+                    && typeof item.name === "string"
+                    && Number.isFinite(item.unitPrice)
+                    && Number.isFinite(item.qty)
+                    && (item.image === undefined || typeof item.image === "string")
+                    && item.qty > 0;
+            })
+            .map((item) => ({
+                ...item,
+                image: item.image || getItemImageFromKey(item.key) || DEFAULT_ITEM_IMAGE
+            }));
     } catch (error) {
         return [];
     }
+}
+
+function getItemImageFromKey(key) {
+    const baseId = Number(String(key).split("-")[0]);
+    if (!Number.isFinite(baseId)) return "";
+
+    const allItems = [...menu.burgers, ...menu.extras, ...menu.drinks];
+    const matched = allItems.find((item) => item.id === baseId);
+    return matched?.image || "";
+}
+
+function resolveAssetPath(assetPath) {
+    if (!assetPath) return "";
+
+    if (/^(https?:)?\/\//.test(assetPath) || assetPath.startsWith("data:")) {
+        return assetPath;
+    }
+
+    if (typeof basePath === "string") {
+        return `${basePath}${assetPath}`;
+    }
+
+    const currentPath = window.location.pathname;
+    const currentDir = currentPath.slice(0, currentPath.lastIndexOf("/") + 1);
+    return `${currentDir}${assetPath}`;
 }
 
 function saveCustomerData() {
