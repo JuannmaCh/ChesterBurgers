@@ -38,9 +38,8 @@ const PAYMENT_METHOD_LABELS = {
 };
 
 const SHIPPING_ZONES = {
-    centro: { label: "Zona 1 (0 a 3 km)", price: 1000 },
-    norte: { label: "Zona 2 (3 a 5 km)", price: 3000 },
-    sur: { label: "Zona 3 (5 a 7 km)", price: 4000 },
+    centro: { label: "Zona 1 (hasta 2.5 km)", price: 1000 },
+    norte: { label: "Zona 2 (de 2.5 km a 4 km)", price: 2000 },
     retiro: { label: "Take away", price: 0 }
 };
 
