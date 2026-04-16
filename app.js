@@ -52,7 +52,7 @@ const currencyFormatter = new Intl.NumberFormat(LOCALE, {
 
 const menu = {
     burgerOfMonth: [
-        { id: 14, name: "Pulled Pork", price: 14000, desc: "Doble medallón 90grs, cerdo desmenuzado en barbacoa (pulled pork), cebolla morada y cheddar con pan de kalis", image: "burger_chester.jpeg" }
+        { id: 14, name: "Pulled Pork", price: 14000, desc: "Doble carne cheddar, bondiola desmenuzada, cebolla crispy, pepinillos agridulces, salsa bbq y salsa chester con pan de kalis", image: "burger_chester.jpeg" }
     ],
     burgers: [
         { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon 90grs y doble cheddar con pan de kalis", image: "burger_chester.jpeg" },
