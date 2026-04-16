@@ -59,7 +59,7 @@ const menu = {
         { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis", image: "burger_chester.jpeg" },
         { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, cebolla crispy y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
         { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla, cheddar y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones encurtidos, cebolla caramelizada y mayochurri con pan de kalis", image: "burger_chester.jpeg" },
+        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones encurtidos, cebolla caramelizada y mayochurri con pan de kalis", image: "burger_chester.jpeg", inStock: false },
         { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, lechuga, tomate, cebolla, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
     ],
     extras: [
@@ -289,17 +289,25 @@ function renderBurgers() {
         </div>
     `;
 
-    burgersList.innerHTML = burgersHeader + menu.burgers.map((item) => `
-        <article class="item-card">
+    burgersList.innerHTML = burgersHeader + menu.burgers.map((item) => {
+        const isOutOfStock = item.inStock === false;
+        const cardClass = isOutOfStock ? "item-card is-out-of-stock" : "item-card";
+        const stockBadge = isOutOfStock ? '<span class="stock-badge" aria-label="Sin stock">SIN STOCK</span>' : "";
+        const buttonLabel = isOutOfStock ? "SIN STOCK" : "ANADIR";
+
+        return `
+        <article class="${cardClass}">
             <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
+                ${stockBadge}
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
-            <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}">ANADIR</button>
+            <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}" ${isOutOfStock ? "disabled" : ""}>${buttonLabel}</button>
         </article>
-    `).join("");
+    `;
+    }).join("");
 }
 
 function renderSimple(list, container, label, type) {
@@ -360,6 +368,11 @@ function addBurger(id) {
     const allBurgers = [...menu.burgerOfMonth, ...menu.burgers];
     const baseItem = allBurgers.find((burger) => burger.id === id);
     if (!baseItem) return;
+
+    if (baseItem.inStock === false) {
+        showFeedback(`${baseItem.name} sin stock`);
+        return;
+    }
 
     currentBurgerToCustomize = baseItem;
 
