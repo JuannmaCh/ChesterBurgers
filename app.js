@@ -14,7 +14,8 @@ const CONFIG_PRICES = {
         triple: 3000,
         cheddar: 1500,
         panceta: 1500,
-        huevo: 1500
+        huevo: 1500,
+        pepino: 500
     }
 };
 
@@ -23,10 +24,11 @@ const BURGER_MODIFIER_META = {
     triple: { inputId: "customizer-triple", displayLabel: "Triple", nameSuffix: " (Triple)" },
     cheddar: { inputId: "customizer-cheddar", displayLabel: "+ Cheddar", nameSuffix: " (+Cheddar)" },
     panceta: { inputId: "customizer-panceta", displayLabel: "+ Panceta", nameSuffix: " (+Panceta)" },
-    huevo: { inputId: "customizer-huevo", displayLabel: "+ Huevo", nameSuffix: " (+Huevo)" }
+    huevo: { inputId: "customizer-huevo", displayLabel: "+ Huevo", nameSuffix: " (+Huevo)" },
+    pepino: { inputId: "customizer-pepino", displayLabel: "+ Pepino", nameSuffix: " (+Pepino)" }
 };
 
-const BURGER_MODIFIER_ORDER = ["notco", "triple", "cheddar", "panceta", "huevo"];
+const BURGER_MODIFIER_ORDER = ["notco", "triple", "cheddar", "panceta", "huevo", "pepino"];
 const STREET_AND_NUMBER_REGEX = /^(?=.*[A-Za-z\u00C0-\u024F])(?=.*\d)[A-Za-z\u00C0-\u024F\d\s.,'#\-/]+$/;
 
 const PAYMENT_METHOD_LABELS = {
@@ -62,14 +64,16 @@ const menu = {
         { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, lechuga, tomate, cebolla, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
     ],
     extras: [
-        { id: 8, name: "Papas Fritas", price: 6000, desc: "Porcion de 120grs", image: "papas_fritas.avif" },
-        { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 8 unidades", image: "aros_de_cebolla.webp", inStock: false }
+        { id: 8, name: "Papas Fritas", price: 4000, desc: "Porcion de 120grs", image: "papas_fritas.avif" },
+        { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 8 unidades", image: "aros_de_cebolla.webp", inStock: true }
     ],
     drinks: [
-        { id: 10, name: "Coca Cola", price: 3000, desc: "Lata 354 ml", image: "lata_coca.webp", inStock: false },
-        { id: 11, name: "Sprite", price: 3000, desc: "Lata 354 ml", image: "lata_sprite.png", inStock: false },
+        { id: 10, name: "Coca Cola", price: 3000, desc: "Lata 354 ml", image: "lata_coca.webp", inStock: true },
+        { id: 11, name: "Sprite", price: 3000, desc: "Lata 354 ml", image: "lata_sprite.png", inStock: true },
         { id: 13, name: "Fanta", price: 3000, desc: "Lata 354 ml", image: "lata_fanta.png", inStock: false },
-        { id: 12, name: "Agua Mineral", price: 2000, desc: "Botella 500 ml", image: "agua.png", inStock: false }
+        { id: 12, name: "Agua Mineral", price: 2000, desc: "Botella 500 ml", image: "agua.png", inStock: true },
+        { id: 15, name: "Cerveza Heineken", price: 4400, desc: "Lata", image: "lata_heineken.png", inStock: true },
+        { id: 16, name: "Cerveza Miller", price: 3400, desc: "Lata", image: "lata_miller.png", inStock: true }
     ]
 };
 
@@ -143,6 +147,7 @@ function bindEvents() {
     document.getElementById("customizer-cheddar").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-panceta").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-huevo").addEventListener("change", updateCustomizerPrice);
+    document.getElementById("customizer-pepino").addEventListener("change", updateCustomizerPrice);
     window.addEventListener("popstate", onWindowPopstate);
 
     customerNameInput.addEventListener("input", () => {
