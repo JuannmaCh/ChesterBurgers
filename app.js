@@ -2,22 +2,15 @@ const LOCALE = "es-AR";
 const CURRENCY = "ARS";
 const CART_STORAGE_KEY = "chester-cart-v1";
 const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
-const WHATSAPP_PHONE = "5491124031761";
-const PICKUP_ADDRESS = "Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina";
-const DEFAULT_ITEM_IMAGE = "burger_chester.jpeg";
-const DISCOUNT_PERCENTAGE = 0.1;
 const BURGER_CUSTOMIZER_HASH = "#burger-customizer";
 
-const CONFIG_PRICES = {
-    modifiers: {
-        notco: 0,
-        triple: 3000,
-        cheddar: 1500,
-        panceta: 1500,
-        huevo: 1500,
-        pepino: 500
-    }
-};
+let WHATSAPP_PHONE;
+let PICKUP_ADDRESS;
+let DEFAULT_ITEM_IMAGE;
+let DISCOUNT_PERCENTAGE;
+let CONFIG_PRICES;
+let SHIPPING_ZONES;
+let menu;
 
 const BURGER_MODIFIER_META = {
     notco: { inputId: "customizer-notco", displayLabel: "NotCo", nameSuffix: " (NotCo)" },
@@ -37,46 +30,13 @@ const PAYMENT_METHOD_LABELS = {
     tarjeta: "Tarjeta"
 };
 
-const SHIPPING_ZONES = {
-    centro: { label: "Zona 1 (hasta 2.5 km)", price: 1000 },
-    norte: { label: "Zona 2 (de 2.5 km a 4 km)", price: 2000 },
-    retiro: { label: "Take away", price: 0 }
-};
-
 const currencyFormatter = new Intl.NumberFormat(LOCALE, {
     style: "currency",
     currency: CURRENCY,
     maximumFractionDigits: 0
 });
 
-const menu = {
-    burgerOfMonth: [
-        { id: 14, name: "Pulled Pork", price: 14000, desc: "Doble medallon 90grs, cheddar, bondiola desmenuzada, cebolla crispy, pepinillos agridulces, salsa bbq y salsa chester con pan de kalis", image: "burger_chester.jpeg" }
-    ],
-    burgers: [
-        { id: 1, name: "Cheese", price: 11700, desc: "Doble medallon 90grs y doble cheddar con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 2, name: "Cheese & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar y panceta con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, cebolla crispy y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla, cheddar y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones encurtidos, cebolla caramelizada y mayochurri con pan de kalis", image: "burger_chester.jpeg", inStock: true },
-        { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, lechuga, tomate, cebolla, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
-    ],
-    extras: [
-        { id: 8, name: "Papas Fritas", price: 4000, desc: "Porcion de 120grs", image: "papas_fritas.avif" },
-        { id: 9, name: "Aros de Cebolla", price: 6000, desc: "Porcion de 8 unidades", image: "aros_de_cebolla.webp", inStock: true }
-    ],
-    drinks: [
-        { id: 10, name: "Coca Cola", price: 3000, desc: "Lata 354 ml", image: "lata_coca.webp", inStock: true },
-        { id: 11, name: "Sprite", price: 3000, desc: "Lata 354 ml", image: "lata_sprite.png", inStock: true },
-        { id: 13, name: "Fanta", price: 3000, desc: "Lata 354 ml", image: "lata_fanta.png", inStock: false },
-        { id: 12, name: "Agua Mineral", price: 2000, desc: "Botella 500 ml", image: "agua.png", inStock: true },
-        { id: 15, name: "Cerveza Heineken", price: 4400, desc: "Lata", image: "lata_heineken.png", inStock: true },
-        { id: 16, name: "Cerveza Miller", price: 3400, desc: "Lata", image: "lata_miller.png", inStock: true }
-    ]
-};
-
-let cart = loadCart();
+let cart = [];
 
 const burgerMonthList = document.getElementById("burger-month-list");
 const burgersList = document.getElementById("burgers-list");
@@ -122,11 +82,34 @@ const burgerCustomizerPrice = document.getElementById("customizer-price");
 
 let currentBurgerToCustomize = null;
 
-hydrateCustomerData();
-render();
-bindEvents();
-updateTotals();
-updateDeliveryModeUI();
+async function init() {
+    try {
+        const [menuData, configData, shippingData] = await Promise.all([
+            fetch("data/menu.json").then(r => r.json()),
+            fetch("data/config.json").then(r => r.json()),
+            fetch("data/shipping.json").then(r => r.json())
+        ]);
+
+        menu = menuData;
+        WHATSAPP_PHONE = configData.whatsappPhone;
+        PICKUP_ADDRESS = configData.pickupAddress;
+        DEFAULT_ITEM_IMAGE = configData.defaultItemImage;
+        DISCOUNT_PERCENTAGE = configData.discountPercentage;
+        CONFIG_PRICES = { modifiers: configData.modifierPrices };
+        SHIPPING_ZONES = shippingData;
+
+        cart = loadCart();
+        hydrateCustomerData();
+        render();
+        bindEvents();
+        updateTotals();
+        updateDeliveryModeUI();
+    } catch (err) {
+        console.error("Error inicializando la app:", err);
+    }
+}
+
+init();
 
 function bindEvents() {
     document.addEventListener("click", onDocumentClick);
