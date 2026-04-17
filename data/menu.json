@@ -10,7 +10,7 @@
         }
     ],
     "burgers": [
-        { "id": 1, "name": "Cheese", "price": 11800, "desc": "Doble medallon 90grs y doble cheddar con pan de kalis", "image": "assets/burger_chester.jpeg", "inStock": true },
+        { "id": 1, "name": "Cheese", "price": 11700, "desc": "Doble medallon 90grs y doble cheddar con pan de kalis", "image": "assets/burger_chester.jpeg", "inStock": true },
         { "id": 2, "name": "Cheese & Bacon", "price": 12800, "desc": "Doble medallon 90grs, cheddar y panceta con pan de kalis", "image": "assets/burger_chester.jpeg", "inStock": true },
         { "id": 3, "name": "Egg & Bacon", "price": 12800, "desc": "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis", "image": "assets/burger_chester.jpeg", "inStock": true },
         { "id": 4, "name": "Crispy Chester", "price": 13000, "desc": "Doble medallon 90grs, cheddar, panceta, cebolla crispy y salsa chester con pan de kalis", "image": "assets/burger_chester.jpeg", "inStock": true },
