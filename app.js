@@ -59,7 +59,7 @@ const menu = {
         { id: 3, name: "Egg & Bacon", price: 12800, desc: "Doble medallon 90grs, cheddar, huevo y panceta con pan de kalis", image: "burger_chester.jpeg" },
         { id: 4, name: "Crispy Chester", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, cebolla crispy y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
         { id: 5, name: "Clasica", price: 12300, desc: "Doble medallon 90grs, lechuga, tomate, cebolla, cheddar y salsa chester con pan de kalis", image: "burger_chester.jpeg" },
-        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones encurtidos, cebolla caramelizada y mayochurri con pan de kalis", image: "burger_chester.jpeg", inStock: false },
+        { id: 6, name: "Criolla", price: 14000, desc: "Doble medallon 90grs, provoleta, morrones encurtidos, cebolla caramelizada y mayochurri con pan de kalis", image: "burger_chester.jpeg", inStock: true },
         { id: 7, name: "Chesty", price: 13000, desc: "Doble medallon 90grs, cheddar, panceta, lechuga, tomate, cebolla, pepino y salsa chesty con pan de kalis", image: "burger_chester.jpeg" }
     ],
     extras: [
