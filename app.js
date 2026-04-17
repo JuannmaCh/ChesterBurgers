@@ -242,7 +242,7 @@ function renderBurgerOfMonth() {
     if (!burgerMonthList) return;
 
     burgerMonthList.innerHTML = menu.burgerOfMonth.map((item) => `
-        <article class="item-card" style="border: 2px solid var(--yellow); padding: 15px; border-radius: 8px; background: rgba(255, 209, 59, 0.05);">
+        <article class="item-card" data-item-id="${item.id}" data-item-name="${item.name}" style="border: 2px solid var(--yellow); padding: 15px; border-radius: 8px; background: rgba(255, 209, 59, 0.05);">
             <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
             <div class="item-details">
                 <span style="background: var(--yellow); color: var(--red); padding: 2px 8px; font-weight: 800; font-size: 0.75rem; border-radius: 4px; text-transform: uppercase;">Estrella del Mes</span>
@@ -250,6 +250,7 @@ function renderBurgerOfMonth() {
                 <p>${item.desc}</p>
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
+            <div class="cart-qty-badge-slot">${buildCartBadgeHTML(item.id, item.name)}</div>
             <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}">ANADIR</button>
         </article>
     `).join("");
@@ -279,7 +280,7 @@ function renderBurgers() {
         const buttonLabel = isOutOfStock ? "SIN STOCK" : "ANADIR";
 
         return `
-        <article class="${cardClass}">
+        <article class="${cardClass}" data-item-id="${item.id}" data-item-name="${item.name}">
             <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
@@ -287,6 +288,7 @@ function renderBurgers() {
                 ${stockBadge}
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
+            <div class="cart-qty-badge-slot">${isOutOfStock ? "" : buildCartBadgeHTML(item.id, item.name)}</div>
             <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}" ${isOutOfStock ? "disabled" : ""}>${buttonLabel}</button>
         </article>
     `;
@@ -301,7 +303,7 @@ function renderSimple(list, container, label, type) {
         const stockBadge = isOutOfStock ? '<span class="stock-badge" aria-label="Sin stock">SIN STOCK</span>' : "";
         const buttonLabel = isOutOfStock ? "SIN STOCK" : "ANADIR";
         return `
-        <article class="${cardClass}">
+        <article class="${cardClass}" data-item-id="${item.id}" data-item-name="${item.name}">
             <div class="item-img"${imgStyle} aria-hidden="true"></div>
             <div class="item-details">
                 <h3>${item.name}</h3>
@@ -309,6 +311,7 @@ function renderSimple(list, container, label, type) {
                 ${stockBadge}
                 <div class="price-tag">${formatMoney(item.price)}</div>
             </div>
+            <div class="cart-qty-badge-slot">${isOutOfStock ? "" : buildCartBadgeHTML(item.id, item.name)}</div>
             <button class="btn-add" type="button" data-action="add-item" data-id="${item.id}" data-type="${type}" aria-label="Anadir ${item.name}" ${isOutOfStock ? "disabled" : ""}>${buttonLabel}</button>
         </article>
     `;
@@ -552,8 +555,48 @@ function clearCart() {
 function persistAndRefresh(statusMessage) {
     saveCart();
     renderCart();
+    renderMenuBadges();
     announce(statusMessage);
     showFeedback(statusMessage);
+}
+
+function renderMenuBadges() {
+    document.querySelectorAll(".item-card[data-item-id]").forEach((card) => {
+        const id = Number(card.dataset.itemId);
+        const baseName = card.dataset.itemName || "";
+        const badgeSlot = card.querySelector(".cart-qty-badge-slot");
+        if (badgeSlot) {
+            badgeSlot.innerHTML = buildCartBadgeHTML(id, baseName);
+        }
+    });
+}
+
+function getCartEntriesForItem(id) {
+    return cart.filter((entry) => Number(String(entry.key).split("-")[0]) === id);
+}
+
+function buildCartBadgeHTML(id, baseName) {
+    const entries = getCartEntriesForItem(id);
+    const total = entries.reduce((sum, e) => sum + e.qty, 0);
+    if (total === 0) return "";
+
+    const hasVariants = entries.length > 1 || entries.some((e) => !e.key.endsWith("-base"));
+    let detailHTML = "";
+
+    if (hasVariants) {
+        detailHTML = `<div class="cart-badge-detail">${
+            entries.map((e) => {
+                const mod = e.name.slice(baseName.length).trim();
+                const label = mod ? `${e.qty}× ${mod}` : `${e.qty}× original`;
+                return `<span class="cart-badge-line">${label}</span>`;
+            }).join("")
+        }</div>`;
+    }
+
+    return `<div class="cart-qty-badge" aria-label="${total} en el carrito">
+        <span class="cart-badge-count">+${total}</span>
+        ${detailHTML}
+    </div>`;
 }
 
 function updateTotals() {

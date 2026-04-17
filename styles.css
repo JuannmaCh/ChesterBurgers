@@ -212,6 +212,40 @@ h2 {
     letter-spacing: 0.03em;
 }
 
+.cart-qty-badge {
+    align-self: flex-end;
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    margin-bottom: 4px;
+}
+
+.cart-badge-count {
+    background: var(--red);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 3px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+}
+
+.cart-badge-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.cart-badge-line {
+    font-size: 0.72rem;
+    color: #888;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+}
+
 .cart-panel {
     background: var(--surface);
     padding: 10px;
