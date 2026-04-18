@@ -104,6 +104,7 @@ async function init() {
         bindEvents();
         updateTotals();
         updateDeliveryModeUI();
+        checkOpeningHours(configData.openingHours);
     } catch (err) {
         console.error("Error inicializando la app:", err);
     }
@@ -1100,4 +1101,65 @@ function refreshCustomizerOptionLabels() {
             ? `${baseLabel} (+${formatMoney(price)})`
             : baseLabel;
     });
+}
+function checkOpeningHours(openingHours) {
+    if (!openingHours || !openingHours.schedule) return;
+
+    const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const DAY_LABELS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+
+    function parseTime(str) {
+        const [h, m] = str.split(":").map(Number);
+        return h * 60 + m;
+    }
+
+    function getNowInArgentina() {
+        const now = new Date();
+        const argStr = now.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" });
+        const arg = new Date(argStr);
+        return { dayIndex: arg.getDay(), totalMinutes: arg.getHours() * 60 + arg.getMinutes() };
+    }
+
+    function isOpenAt(schedule, dayIndex, totalMinutes) {
+        const dayName = DAY_NAMES[dayIndex];
+        const hours = schedule[dayName];
+        if (!hours) return false;
+        const open = parseTime(hours.open);
+        let close = parseTime(hours.close);
+        if (close === 0) close = 24 * 60;
+        return totalMinutes >= open && totalMinutes < close;
+    }
+
+    function getNextOpenInfo(schedule, dayIndex, totalMinutes) {
+        for (let i = 0; i <= 7; i++) {
+            const d = (dayIndex + i) % 7;
+            const dayName = DAY_NAMES[d];
+            const hours = schedule[dayName];
+            if (!hours) continue;
+            const open = parseTime(hours.open);
+            if (i === 0 && totalMinutes >= open) continue;
+            return `${DAY_LABELS[d]} a las ${hours.open}`;
+        }
+        return null;
+    }
+
+    const { dayIndex, totalMinutes } = getNowInArgentina();
+    const schedule = openingHours.schedule;
+    const open = isOpenAt(schedule, dayIndex, totalMinutes);
+
+    const banner = document.getElementById("closed-banner");
+    const bannerText = document.getElementById("closed-banner-text");
+    const orderBtn = document.getElementById("order-btn");
+
+    if (!open) {
+        const next = getNextOpenInfo(schedule, dayIndex, totalMinutes);
+        bannerText.textContent = next
+            ? `🔒 Estamos cerrados. Abrimos el ${next}.`
+            : `🔒 Estamos cerrados por hoy.`;
+        banner.style.display = "block";
+        if (orderBtn) {
+            orderBtn.disabled = true;
+            orderBtn.title = "Estamos cerrados";
+        }
+    }
 }
