@@ -20,7 +20,7 @@
     ],
     "extras": [
         { "id": 8, "name": "Papas Fritas", "price": 4500, "desc": "Porcion de 120grs", "image": "assets/papas_fritas.avif" },
-        { "id": 9, "name": "Aros de Cebolla", "price": 6000, "desc": "Porcion de 8 unidades", "image": "assets/aros_de_cebolla.webp", "inStock": true }
+        { "id": 9, "name": "Aros de Cebolla", "price": 6000, "desc": "Porcion de 6 unidades", "image": "assets/aros_de_cebolla.webp", "inStock": true }
     ],
     "drinks": [
         { "id": 10, "name": "Coca Cola", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_coca.webp", "inStock": true },
