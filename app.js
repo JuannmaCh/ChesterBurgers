@@ -773,6 +773,11 @@ function openCheckout() {
         return;
     }
 
+    if (orderBtn.disabled) {
+        showFeedback("Estamos cerrados. Por favor, intenta más tarde.");
+        return;
+    }
+
     closeCartDrawer();
     updateTotals();
     checkoutModal.removeAttribute("hidden");
