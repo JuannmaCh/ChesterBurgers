@@ -774,7 +774,6 @@ function openCheckout() {
     }
 
     closeCartDrawer();
-    deliveryZoneSelect.value = "";
     updateTotals();
     updateDeliveryModeUI();
     checkoutModal.removeAttribute("hidden");
@@ -782,7 +781,7 @@ function openCheckout() {
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             checkoutModal.classList.add("is-open");
-            deliveryZoneSelect.focus();
+            customerNameInput.focus();
         });
     });
 }
