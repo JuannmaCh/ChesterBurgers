@@ -83,6 +83,14 @@
         <label class="form-label" for="customer-name">Nombre</label>
         <input id="customer-name" class="form-input" type="text" autocomplete="name" placeholder="Ej: Juan Perez">
 
+        <label class="form-label" for="delivery-zone">Tipo de envío</label>
+        <select id="delivery-zone" class="form-select">
+            <option value="">Selecciona una opción</option>
+            <option value="centro">Delivery - Zona 1 (hasta 2.5 km) - $1000</option>
+            <option value="norte">Delivery - Zona 2 (de 2.5 km a 4 km) - $2000</option>
+            <option value="retiro">Take away (10% OFF)</option>
+        </select>
+
         <div id="delivery-address-fields">
             <label class="form-label" for="customer-street-number">Calle y numero</label>
             <input id="customer-street-number" class="form-input" type="text" autocomplete="street-address" placeholder="Ej: Av. Siempre Viva 123">
@@ -102,14 +110,6 @@
             <label class="form-label" for="customer-between-streets">Entre calles</label>
             <input id="customer-between-streets" class="form-input" type="text" autocomplete="off" placeholder="Ej: Maipu y Belgrano">
         </div>
-
-        <label class="form-label" for="delivery-zone">Zona</label>
-        <select id="delivery-zone" class="form-select">
-            <option value="">Selecciona una zona</option>
-            <option value="centro">Zona 1 (hasta 2.5 km) - $1000</option>
-            <option value="norte">Zona 2 (de 2.5 km a 4 km) - $2000</option>
-            <option value="retiro">Take away (10% OFF)</option>
-        </select>
 
         <label class="form-label" for="payment-method">Metodo de pago</label>
         <select id="payment-method" class="form-select">

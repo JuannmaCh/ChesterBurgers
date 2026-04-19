@@ -774,13 +774,15 @@ function openCheckout() {
     }
 
     closeCartDrawer();
+    deliveryZoneSelect.value = "";
     updateTotals();
+    updateDeliveryModeUI();
     checkoutModal.removeAttribute("hidden");
     syncBodyScrollLock();
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             checkoutModal.classList.add("is-open");
-            customerNameInput.focus();
+            deliveryZoneSelect.focus();
         });
     });
 }
