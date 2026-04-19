@@ -91,6 +91,8 @@
             <option value="retiro">Take away (10% OFF)</option>
         </select>
 
+        <div id="checkout-zone-dependent" hidden>
+
         <div id="delivery-address-fields">
             <label class="form-label" for="customer-street-number">Calle y numero</label>
             <input id="customer-street-number" class="form-input" type="text" autocomplete="street-address" placeholder="Ej: Av. Siempre Viva 123">
@@ -126,6 +128,11 @@
         <label class="form-label" for="customer-notes">Aclaraciones (opcional)</label>
         <textarea id="customer-notes" class="form-input form-textarea" rows="3" placeholder="Ej: sin cebolla, el timbre no anda"></textarea>
 
+        <div class="checkout-detail">
+            <h3>Detalle del pedido</h3>
+            <div id="checkout-detail-list" class="checkout-detail-list"></div>
+        </div>
+
         <div class="checkout-totals" aria-live="polite">
             <div>Subtotal: <span id="subtotal-price">$0</span></div>
             <div>Envio: <span id="shipping-price">$0</span></div>
@@ -135,13 +142,9 @@
             <div class="checkout-grand-total">Total final: <span id="grand-total-price">$0</span></div>
         </div>
 
-        <div class="checkout-detail">
-            <h3>Detalle del pedido</h3>
-            <div id="checkout-detail-list" class="checkout-detail-list"></div>
-            <div class="checkout-detail-subtotal">Subtotal productos: <span id="checkout-detail-subtotal">$0</span></div>
-        </div>
-
         <button id="submit-order-btn" class="btn-order btn-submit-order" type="button">ENVIAR A WHATSAPP</button>
+
+        </div><!-- /#checkout-zone-dependent -->
     </div>
 </section>
 

@@ -53,7 +53,7 @@ const subtotalPrice = document.getElementById("subtotal-price");
 const shippingPrice = document.getElementById("shipping-price");
 const grandTotalPrice = document.getElementById("grand-total-price");
 const checkoutDetailList = document.getElementById("checkout-detail-list");
-const checkoutDetailSubtotal = document.getElementById("checkout-detail-subtotal");
+
 const customerNameInput = document.getElementById("customer-name");
 const deliveryAddressFields = document.getElementById("delivery-address-fields");
 const customerStreetNumberInput = document.getElementById("customer-street-number");
@@ -606,7 +606,7 @@ function updateTotals() {
     subtotalPrice.textContent = formatMoney(summary.subtotal);
     shippingPrice.textContent = formatMoney(summary.shipping);
     grandTotalPrice.textContent = formatMoney(summary.total);
-    checkoutDetailSubtotal.textContent = formatMoney(summary.subtotal);
+
 
     if (summary.discount > 0) {
         discountLabel.textContent = `Descuento (${summary.discountReason})`;
@@ -773,7 +773,7 @@ function openCheckout() {
         return;
     }
 
-    if (orderBtn.disabled) {
+    if (orderBtn.dataset.closed === "true") {
         showFeedback("Estamos cerrados. Por favor, intenta más tarde.");
         return;
     }
@@ -1050,6 +1050,17 @@ function showFeedback(message) {
 
 function updateDeliveryModeUI() {
     const isPickup = deliveryZoneSelect.value === "retiro";
+    const hasZone = deliveryZoneSelect.value !== "";
+
+    const efectivoOption = document.querySelector("#payment-method option[value='efectivo']");
+    if (efectivoOption) {
+        efectivoOption.textContent = isPickup ? "Efectivo" : "Efectivo (10% OFF)";
+    }
+
+    const zoneDependentFields = document.getElementById("checkout-zone-dependent");
+    if (zoneDependentFields) {
+        zoneDependentFields.hidden = !hasZone;
+    }
 
     if (pickupAddressNote) {
         pickupAddressNote.hidden = !isPickup;
@@ -1164,8 +1175,10 @@ function checkOpeningHours(openingHours) {
             : `🔒 Estamos cerrados por hoy.`;
         banner.style.display = "block";
         if (orderBtn) {
-            orderBtn.disabled = true;
+            orderBtn.dataset.closed = "true";
+            orderBtn.setAttribute("aria-disabled", "true");
             orderBtn.title = "Estamos cerrados";
+            orderBtn.dataset.nextOpen = next ? `Abrimos el ${next}` : "Cerrado por hoy";
         }
     }
 }
