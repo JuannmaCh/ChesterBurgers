@@ -775,11 +775,11 @@ function openCheckout() {
 
     closeCartDrawer();
     updateTotals();
-    updateDeliveryModeUI();
     checkoutModal.removeAttribute("hidden");
     syncBodyScrollLock();
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+            updateDeliveryModeUI();
             checkoutModal.classList.add("is-open");
             customerNameInput.focus();
         });
