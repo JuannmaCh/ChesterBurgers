@@ -250,7 +250,7 @@ function renderBurgerOfMonth() {
                 <span style="background: var(--yellow); color: var(--red); padding: 2px 8px; font-weight: 800; font-size: 0.75rem; border-radius: 4px; text-transform: uppercase;">Estrella del Mes</span>
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
-                <div class="price-tag">${formatMoney(item.price)}</div>
+                ${getItemPriceHTML(item)}
             </div>
             <div class="cart-qty-badge-slot">${buildCartBadgeHTML(item.id, item.name)}</div>
             <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}">ANADIR</button>
@@ -288,7 +288,7 @@ function renderBurgers() {
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
                 ${stockBadge}
-                <div class="price-tag">${formatMoney(item.price)}</div>
+                ${getItemPriceHTML(item)}
             </div>
             <div class="cart-qty-badge-slot">${isOutOfStock ? "" : buildCartBadgeHTML(item.id, item.name)}</div>
             <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}" ${isOutOfStock ? "disabled" : ""}>${buttonLabel}</button>
@@ -828,6 +828,58 @@ function getCartItemCount() {
 function createCartKey(baseId, modifiers) {
     const normalizedModifiers = [...modifiers].filter(Boolean).sort();
     return `${baseId}-${normalizedModifiers.join("-") || "base"}`;
+}
+
+function getItemPriceHTML(item) {
+    const today = new Date().getDay();
+    let discountedPrice = item.price;
+    let hasDiscount = false;
+    let promoBadge = "";
+
+    // Sabados: cheese bacon (2) y chesty (7) 15% off
+    if (today === 6 && (item.id === 2 || item.id === 7)) {
+        discountedPrice = Math.round(item.price * 0.85);
+        hasDiscount = true;
+        promoBadge = "15% OFF";
+    } 
+    // Domingos: egg bacon (3) 15% off
+    else if (today === 0 && item.id === 3) {
+        discountedPrice = Math.round(item.price * 0.85);
+        hasDiscount = true;
+        promoBadge = "15% OFF";
+    } 
+    // Jueves: empanada de regalo
+    else if (today === 4) {
+        const isBurger = menu.burgers.some(b => b.id === item.id) || menu.burgerOfMonth.some(b => b.id === item.id);
+        if (isBurger) {
+            promoBadge = "🎁 + Empanada Gratis";
+        }
+    } 
+    // Viernes: Combos
+    else if (today === 5 && item.id === 4) {
+        promoBadge = "Combo Promo";
+    }
+
+    if (hasDiscount) {
+        return `
+            <div class="price-tag">
+                <span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(item.price)}</span>
+                <span>${formatMoney(discountedPrice)}</span>
+                <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${promoBadge}</span>
+            </div>
+        `;
+    }
+
+    if (promoBadge) {
+        return `
+            <div class="price-tag">
+                <span>${formatMoney(item.price)}</span>
+                <span style="background: var(--red); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${promoBadge}</span>
+            </div>
+        `;
+    }
+
+    return `<div class="price-tag">${formatMoney(item.price)}</div>`;
 }
 
 function formatMoney(value) {
