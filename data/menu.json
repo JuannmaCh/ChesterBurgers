@@ -2,9 +2,9 @@
     "burgerOfMonth": [
         {
             "id": 14,
-            "name": "Pulled Pork",
-            "price": 14000,
-            "desc": "Doble medallon 90grs, cheddar, bondiola desmenuzada, cebolla crispy, pepinillos agridulces, salsa bbq y salsa chester con pan de kalis",
+            "name": "Oklahoma Burger",
+            "price": 12500,
+            "desc": "Doble medallon 90grs smasheado con cebolla a la plancha y doble cheddar con pan de kalis",
             "image": "assets/burger_chester.jpeg",
             "inStock": true
         }
