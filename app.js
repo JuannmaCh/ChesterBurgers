@@ -102,6 +102,7 @@ async function init() {
         hydrateCustomerData();
         render();
         bindEvents();
+        updateDailyPromoBanner();
         updateTotals();
         updateDeliveryModeUI();
         checkOpeningHours(configData.openingHours);
@@ -621,25 +622,148 @@ function updateTotals() {
     totalPrice.textContent = formatMoney(summary.total);
     cartCount.textContent = getCartItemCount();
 
-    renderCheckoutDetail();
+    renderCheckoutDetail(summary.freeItems);
 }
 
-function renderCheckoutDetail() {
+function renderCheckoutDetail(freeItems = []) {
     if (cart.length === 0) {
         checkoutDetailList.innerHTML = '<div class="checkout-detail-item">No hay productos en el pedido.</div>';
         return;
     }
 
-    checkoutDetailList.innerHTML = cart.map((item) => {
+    let detailHTML = cart.map((item) => {
         const itemSubtotal = item.unitPrice * item.qty;
         return `<div class="checkout-detail-item">${item.qty} x ${item.name} - ${formatMoney(itemSubtotal)}</div>`;
     }).join("");
+    
+    if (freeItems && freeItems.length > 0) {
+        detailHTML += freeItems.map(fi => `<div class="checkout-detail-item" style="color: #1f7a2e; font-weight: bold; margin-top: 4px;">🎁 ${fi} - ¡GRATIS!</div>`).join("");
+    }
+    
+    checkoutDetailList.innerHTML = detailHTML;
 }
 
 function getShippingCost() {
     const zone = deliveryZoneSelect.value;
     if (!zone || !SHIPPING_ZONES[zone]) return 0;
     return SHIPPING_ZONES[zone].price;
+}
+
+function getDailyPromoInfo(cartItems) {
+    const today = new Date().getDay();
+    let promoDiscount = 0;
+    let promoReason = "";
+    let freeItems = [];
+
+    if (today === 0) {
+        let eligibleSubtotal = 0;
+        cartItems.forEach(item => {
+            const baseId = Number(String(item.key).split("-")[0]);
+            if (baseId === 3) {
+                eligibleSubtotal += item.unitPrice * item.qty;
+            }
+        });
+        if (eligibleSubtotal > 0) {
+            promoDiscount = eligibleSubtotal * 0.15;
+            promoReason = "15% OFF en Egg & Bacon";
+        }
+    } else if (today === 4) {
+        let burgerCount = 0;
+        cartItems.forEach(item => {
+            const baseId = Number(String(item.key).split("-")[0]);
+            const isBurger = menu.burgers.some(b => b.id === baseId) || menu.burgerOfMonth.some(b => b.id === baseId);
+            if (isBurger) {
+                burgerCount += item.qty;
+            }
+        });
+        if (burgerCount > 0) {
+            freeItems.push(`${burgerCount}x Empanada de bondiola desmenuzada`);
+            promoReason = "Empanadas de regalo";
+        }
+    } else if (today === 5) {
+        let crispyItems = [];
+        let latitaItems = [];
+        let cervezaItems = [];
+        
+        cartItems.forEach(item => {
+            const baseId = Number(String(item.key).split("-")[0]);
+            if (baseId === 4) {
+                for(let i=0; i<item.qty; i++) crispyItems.push(item);
+            } else if ([10, 11, 13].includes(baseId)) {
+                for(let i=0; i<item.qty; i++) latitaItems.push(item.unitPrice);
+            } else if ([15, 16].includes(baseId)) {
+                for(let i=0; i<item.qty; i++) cervezaItems.push(item.unitPrice);
+            }
+        });
+
+        latitaItems.sort((a,b) => b - a);
+        cervezaItems.sort((a,b) => b - a);
+
+        let comboLatitaCount = 0;
+        let comboCervezaCount = 0;
+
+        for (let crispy of crispyItems) {
+            if (cervezaItems.length > 0) {
+                let cervPrice = cervezaItems.shift();
+                let baseComboPrice = 13000 + cervPrice;
+                if (baseComboPrice > 17000) {
+                    promoDiscount += (baseComboPrice - 17000);
+                    comboCervezaCount++;
+                }
+            } else if (latitaItems.length > 0) {
+                let latPrice = latitaItems.shift();
+                let baseComboPrice = 13000 + latPrice;
+                if (baseComboPrice > 15000) {
+                    promoDiscount += (baseComboPrice - 15000);
+                    comboLatitaCount++;
+                }
+            }
+        }
+
+        if (promoDiscount > 0) {
+            let parts = [];
+            if (comboCervezaCount > 0) parts.push(`${comboCervezaCount} Combo Cerveza`);
+            if (comboLatitaCount > 0) parts.push(`${comboLatitaCount} Combo Latita`);
+            promoReason = parts.join(" y ");
+        }
+    } else if (today === 6) {
+        let eligibleSubtotal = 0;
+        cartItems.forEach(item => {
+            const baseId = Number(String(item.key).split("-")[0]);
+            if (baseId === 2 || baseId === 7) {
+                eligibleSubtotal += item.unitPrice * item.qty;
+            }
+        });
+        if (eligibleSubtotal > 0) {
+            promoDiscount = eligibleSubtotal * 0.15;
+            promoReason = "15% OFF en Cheese & Bacon y Chesty";
+        }
+    }
+
+    return {
+        amount: Math.round(promoDiscount),
+        reason: promoReason,
+        freeItems: freeItems
+    };
+}
+
+function updateDailyPromoBanner() {
+    const banner = document.getElementById("daily-promo-banner");
+    if (!banner) return;
+    
+    const today = new Date().getDay();
+    let text = "";
+    if (today === 0) text = "🔥 PROMO HOY DOMINGO: 15% OFF en Egg & Bacon!";
+    else if (today === 4) text = "🔥 PROMO HOY JUEVES: ¡Llevate una empanada de bondiola desmenuzada GRATIS con cada burger!";
+    else if (today === 5) text = "🔥 PROMO HOY VIERNES: Crispy Chester + Latita $15.000 | Crispy Chester + Cerveza $17.000";
+    else if (today === 6) text = "🔥 PROMO HOY SÁBADO: 15% OFF en Cheese & Bacon y Chesty!";
+    
+    if (text) {
+        banner.textContent = text;
+        banner.hidden = false;
+    } else {
+        banner.hidden = true;
+    }
 }
 
 function getDiscountInfo(subtotal, zoneCode, paymentMethod) {
@@ -669,16 +793,27 @@ function calculateOrderSummary() {
     const zoneCode = deliveryZoneSelect.value;
     const shipping = getShippingCost();
     const paymentMethod = paymentMethodSelect.value;
-    const discountInfo = getDiscountInfo(subtotal, zoneCode, paymentMethod);
-    const total = Math.max(0, subtotal + shipping - discountInfo.amount);
+    
+    const dailyPromo = getDailyPromoInfo(cart);
+    const subtotalAfterPromo = Math.max(0, subtotal - dailyPromo.amount);
+    const baseDiscountInfo = getDiscountInfo(subtotalAfterPromo, zoneCode, paymentMethod);
+    
+    const totalDiscount = baseDiscountInfo.amount + dailyPromo.amount;
+    let reasons = [];
+    if (dailyPromo.reason) reasons.push(dailyPromo.reason);
+    if (baseDiscountInfo.reason) reasons.push(baseDiscountInfo.reason);
+    const combinedReason = reasons.join(" + ");
+
+    const total = Math.max(0, subtotal + shipping - totalDiscount);
 
     return {
         subtotal,
         shipping,
-        discount: discountInfo.amount,
-        discountReason: discountInfo.reason,
+        discount: totalDiscount,
+        discountReason: combinedReason,
         paymentMethod,
-        total
+        total,
+        freeItems: dailyPromo.freeItems
     };
 }
 
@@ -746,6 +881,12 @@ function sendOrder() {
         const itemSubtotal = item.unitPrice * item.qty;
         lines.push(`- ${item.qty} x ${item.name} (${formatMoney(item.unitPrice)}) = ${formatMoney(itemSubtotal)}`);
     });
+
+    if (summary.freeItems && summary.freeItems.length > 0) {
+        summary.freeItems.forEach(fi => {
+            lines.push(`- 🎁 ${fi} (¡GRATIS!)`);
+        });
+    }
 
     lines.push(
         "",
