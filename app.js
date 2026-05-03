@@ -654,6 +654,7 @@ function getDailyPromoInfo(cartItems) {
     let promoDiscount = 0;
     let promoReason = "";
     let freeItems = [];
+    let coveredSubtotal = 0;
 
     if (today === 0) {
         let eligibleSubtotal = 0;
@@ -666,19 +667,23 @@ function getDailyPromoInfo(cartItems) {
         if (eligibleSubtotal > 0) {
             promoDiscount = eligibleSubtotal * 0.15;
             promoReason = "15% OFF en Egg & Bacon";
+            coveredSubtotal = eligibleSubtotal;
         }
     } else if (today === 4) {
         let burgerCount = 0;
+        let eligibleSubtotal = 0;
         cartItems.forEach(item => {
             const baseId = Number(String(item.key).split("-")[0]);
             const isBurger = menu.burgers.some(b => b.id === baseId) || menu.burgerOfMonth.some(b => b.id === baseId);
             if (isBurger) {
                 burgerCount += item.qty;
+                eligibleSubtotal += item.unitPrice * item.qty;
             }
         });
         if (burgerCount > 0) {
             freeItems.push(`${burgerCount}x Empanada de bondiola desmenuzada`);
             promoReason = "Empanadas de regalo";
+            coveredSubtotal = eligibleSubtotal;
         }
     } else if (today === 5) {
         let crispyItems = [];
@@ -708,6 +713,7 @@ function getDailyPromoInfo(cartItems) {
                 let baseComboPrice = 13000 + cervPrice;
                 if (baseComboPrice > 17000) {
                     promoDiscount += (baseComboPrice - 17000);
+                    coveredSubtotal += baseComboPrice;
                     comboCervezaCount++;
                 }
             } else if (latitaItems.length > 0) {
@@ -715,6 +721,7 @@ function getDailyPromoInfo(cartItems) {
                 let baseComboPrice = 13000 + latPrice;
                 if (baseComboPrice > 15000) {
                     promoDiscount += (baseComboPrice - 15000);
+                    coveredSubtotal += baseComboPrice;
                     comboLatitaCount++;
                 }
             }
@@ -737,13 +744,15 @@ function getDailyPromoInfo(cartItems) {
         if (eligibleSubtotal > 0) {
             promoDiscount = eligibleSubtotal * 0.15;
             promoReason = "15% OFF en Cheese & Bacon y Chesty";
+            coveredSubtotal = eligibleSubtotal;
         }
     }
 
     return {
         amount: Math.round(promoDiscount),
         reason: promoReason,
-        freeItems: freeItems
+        freeItems: freeItems,
+        coveredSubtotal: coveredSubtotal
     };
 }
 
@@ -795,8 +804,8 @@ function calculateOrderSummary() {
     const paymentMethod = paymentMethodSelect.value;
     
     const dailyPromo = getDailyPromoInfo(cart);
-    const subtotalAfterPromo = Math.max(0, subtotal - dailyPromo.amount);
-    const baseDiscountInfo = getDiscountInfo(subtotalAfterPromo, zoneCode, paymentMethod);
+    const subtotalForBaseDiscount = Math.max(0, subtotal - (dailyPromo.coveredSubtotal || 0));
+    const baseDiscountInfo = getDiscountInfo(subtotalForBaseDiscount, zoneCode, paymentMethod);
     
     const totalDiscount = baseDiscountInfo.amount + dailyPromo.amount;
     let reasons = [];
