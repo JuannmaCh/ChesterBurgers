@@ -654,15 +654,16 @@ function getDailyPromoInfo(cartItems) {
     let promoDiscount = 0;
     let promoReason = "";
     let freeItems = [];
+    let coveredSubtotal = 0;
 
-    // Helper: suma subtotal de items que coincidan con un id de burger
+    // Helper: suma subtotal de items que coincidan con ids dados
     function eligibleSubtotalFor(ids) {
-        let subtotal = 0;
+        let sub = 0;
         cartItems.forEach(item => {
             const baseId = Number(String(item.key).split("-")[0]);
-            if (ids.includes(baseId)) subtotal += item.unitPrice * item.qty;
+            if (ids.includes(baseId)) sub += item.unitPrice * item.qty;
         });
-        return subtotal;
+        return sub;
     }
 
     if (today === 1) {
@@ -671,22 +672,29 @@ function getDailyPromoInfo(cartItems) {
         if (sub > 0) {
             promoDiscount = sub * 0.15;
             promoReason = "15% OFF en Oklahoma Burger";
+            coveredSubtotal = sub;
         }
     } else if (today === 4) {
-        // Jueves: empanada de bondiola desmenuzada incluida por burger (sello) + 15% OFF en Clásica (id: 5)
+        // Jueves: sello empanada de bondiola por burger + 15% OFF en Clásica (id: 5)
         let burgerCount = 0;
+        let burgerSubtotal = 0;
         cartItems.forEach(item => {
             const baseId = Number(String(item.key).split("-")[0]);
             const isBurger = menu.burgers.some(b => b.id === baseId) || menu.burgerOfMonth.some(b => b.id === baseId);
-            if (isBurger) burgerCount += item.qty;
+            if (isBurger) {
+                burgerCount += item.qty;
+                burgerSubtotal += item.unitPrice * item.qty;
+            }
         });
         if (burgerCount > 0) {
             freeItems.push(`${burgerCount}x Empanada de bondiola desmenuzada`);
+            coveredSubtotal = burgerSubtotal;
         }
         const sub = eligibleSubtotalFor([5]);
         if (sub > 0) {
             promoDiscount = sub * 0.15;
             promoReason = (burgerCount > 0 ? "Empanada incluida + " : "") + "15% OFF en Clásica";
+            coveredSubtotal = burgerSubtotal; // items de burger ya cubiertos
         } else if (burgerCount > 0) {
             promoReason = "Empanada incluida";
         }
@@ -696,6 +704,7 @@ function getDailyPromoInfo(cartItems) {
         if (sub > 0) {
             promoDiscount = sub * 0.15;
             promoReason = "15% OFF en Crispy Chester";
+            coveredSubtotal = sub;
         }
     } else if (today === 6) {
         // Sábado: 15% OFF Chesty (id: 7)
@@ -703,6 +712,7 @@ function getDailyPromoInfo(cartItems) {
         if (sub > 0) {
             promoDiscount = sub * 0.15;
             promoReason = "15% OFF en Chesty";
+            coveredSubtotal = sub;
         }
     } else if (today === 0) {
         // Domingo: 15% OFF Cheese & Bacon (id: 2)
@@ -710,15 +720,18 @@ function getDailyPromoInfo(cartItems) {
         if (sub > 0) {
             promoDiscount = sub * 0.15;
             promoReason = "15% OFF en Cheese & Bacon";
+            coveredSubtotal = sub;
         }
     }
 
     return {
         amount: Math.round(promoDiscount),
         reason: promoReason,
-        freeItems: freeItems
+        freeItems: freeItems,
+        coveredSubtotal: coveredSubtotal
     };
 }
+
 
 function updateDailyPromoBanner() {
     const banner = document.getElementById("daily-promo-banner");
@@ -731,7 +744,7 @@ function updateDailyPromoBanner() {
     else if (today === 5) text = "🔥 PROMO HOY VIERNES: 15% OFF en Crispy Chester!";
     else if (today === 6) text = "🔥 PROMO HOY SÁBADO: 15% OFF en Chesty!";
     else if (today === 0) text = "🔥 PROMO HOY DOMINGO: 15% OFF en Cheese & Bacon!";
-
+    
     if (text) {
         banner.textContent = text;
         banner.hidden = false;
@@ -769,8 +782,8 @@ function calculateOrderSummary() {
     const paymentMethod = paymentMethodSelect.value;
     
     const dailyPromo = getDailyPromoInfo(cart);
-    const subtotalAfterPromo = Math.max(0, subtotal - dailyPromo.amount);
-    const baseDiscountInfo = getDiscountInfo(subtotalAfterPromo, zoneCode, paymentMethod);
+    const subtotalForBaseDiscount = Math.max(0, subtotal - (dailyPromo.coveredSubtotal || 0));
+    const baseDiscountInfo = getDiscountInfo(subtotalForBaseDiscount, zoneCode, paymentMethod);
     
     const totalDiscount = baseDiscountInfo.amount + dailyPromo.amount;
     let reasons = [];
@@ -814,9 +827,9 @@ function getItemPriceHTML(item) {
     const isBurger = menu.burgers.some(b => b.id === item.id) || menu.burgerOfMonth.some(b => b.id === item.id);
 
     if (today === 4) {
-        // Jueves: sello de empanada en todas las burgers
+        // Jueves: sello empanada en todas las burgers
         if (isBurger) selloBadge = "🫔 + Empanada Incluida";
-        // 15% OFF en Clásica (id: 5)
+        // 15% OFF en Clasica (id: 5)
         if (item.id === 5) {
             discountedPrice = Math.round(item.price * 0.85);
             hasDiscount = true;
@@ -828,7 +841,7 @@ function getItemPriceHTML(item) {
         hasDiscount = true;
         discountBadge = "15% OFF";
     } else if (today === 6 && item.id === 7) {
-        // Sábado: 15% OFF Chesty
+        // Sabado: 15% OFF Chesty
         discountedPrice = Math.round(item.price * 0.85);
         hasDiscount = true;
         discountBadge = "15% OFF";
@@ -844,19 +857,14 @@ function getItemPriceHTML(item) {
         discountBadge = "15% OFF";
     }
 
-    let priceContent = "";
-    if (hasDiscount) {
-        priceContent = `
-            <span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(item.price)}</span>
+    let priceContent = hasDiscount
+        ? `<span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(item.price)}</span>
             <span>${formatMoney(discountedPrice)}</span>
-            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${discountBadge}</span>
-        `;
-    } else {
-        priceContent = `<span>${formatMoney(item.price)}</span>`;
-    }
+            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${discountBadge}</span>`
+        : `<span>${formatMoney(item.price)}</span>`;
 
     if (selloBadge) {
-        priceContent += `<span style="background: var(--red); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${selloBadge}</span>`;
+        priceContent += ` <span style="background: var(--red); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${selloBadge}</span>`;
     }
 
     return `<div class="price-tag">${priceContent}</div>`;
