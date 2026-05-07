@@ -3,6 +3,7 @@ const CURRENCY = "ARS";
 const CART_STORAGE_KEY = "chester-cart-v1";
 const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const BURGER_CUSTOMIZER_HASH = "#burger-customizer";
+const EMPANADA_PROMO_ACTIVE = false; // Cambiar a true cuando haya empanadas disponibles
 
 let WHATSAPP_PHONE;
 let PICKUP_ADDRESS;
@@ -675,28 +676,38 @@ function getDailyPromoInfo(cartItems) {
             coveredSubtotal = sub;
         }
     } else if (today === 4) {
-        // Jueves: sello empanada de bondiola por burger + 15% OFF en Clásica (id: 5)
-        let burgerCount = 0;
-        let burgerSubtotal = 0;
-        cartItems.forEach(item => {
-            const baseId = Number(String(item.key).split("-")[0]);
-            const isBurger = menu.burgers.some(b => b.id === baseId) || menu.burgerOfMonth.some(b => b.id === baseId);
-            if (isBurger) {
-                burgerCount += item.qty;
-                burgerSubtotal += item.unitPrice * item.qty;
+        // Jueves: sello empanada de bondiola por burger (si está activa) + 15% OFF en Clásica (id: 5)
+        if (EMPANADA_PROMO_ACTIVE) {
+            let burgerCount = 0;
+            let burgerSubtotal = 0;
+            cartItems.forEach(item => {
+                const baseId = Number(String(item.key).split("-")[0]);
+                const isBurger = menu.burgers.some(b => b.id === baseId) || menu.burgerOfMonth.some(b => b.id === baseId);
+                if (isBurger) {
+                    burgerCount += item.qty;
+                    burgerSubtotal += item.unitPrice * item.qty;
+                }
+            });
+            if (burgerCount > 0) {
+                freeItems.push(`${burgerCount}x Empanada de bondiola desmenuzada`);
+                coveredSubtotal = burgerSubtotal;
             }
-        });
-        if (burgerCount > 0) {
-            freeItems.push(`${burgerCount}x Empanada de bondiola desmenuzada`);
-            coveredSubtotal = burgerSubtotal;
-        }
-        const sub = eligibleSubtotalFor([5]);
-        if (sub > 0) {
-            promoDiscount = sub * 0.15;
-            promoReason = (burgerCount > 0 ? "Empanada incluida + " : "") + "15% OFF en Clásica";
-            coveredSubtotal = burgerSubtotal; // items de burger ya cubiertos
-        } else if (burgerCount > 0) {
-            promoReason = "Empanada incluida";
+            const sub = eligibleSubtotalFor([5]);
+            if (sub > 0) {
+                promoDiscount = sub * 0.15;
+                promoReason = (burgerCount > 0 ? "Empanada incluida + " : "") + "15% OFF en Clásica";
+                coveredSubtotal = burgerSubtotal;
+            } else if (burgerCount > 0) {
+                promoReason = "Empanada incluida";
+            }
+        } else {
+            // Sin empanadas hoy, solo 15% OFF en Clásica
+            const sub = eligibleSubtotalFor([5]);
+            if (sub > 0) {
+                promoDiscount = sub * 0.15;
+                promoReason = "15% OFF en Clásica";
+                coveredSubtotal = sub;
+            }
         }
     } else if (today === 5) {
         // Viernes: 15% OFF Crispy Chester (id: 4)
@@ -740,7 +751,9 @@ function updateDailyPromoBanner() {
     const today = new Date().getDay();
     let text = "";
     if (today === 1)      text = "🔥 PROMO HOY LUNES: 15% OFF en Oklahoma Burger (Burger del Mes)!";
-    else if (today === 4) text = "🔥 PROMO HOY JUEVES: 🫔 ¡Empanada de bondiola desmenuzada incluida con cada burger! + 15% OFF en Clásica";
+    else if (today === 4) text = EMPANADA_PROMO_ACTIVE
+        ? "🔥 PROMO HOY JUEVES: 🫔 ¡Empanada de bondiola desmenuzada incluida con cada burger! + 15% OFF en Clásica"
+        : "🔥 PROMO HOY JUEVES: 15% OFF en Clásica!";
     else if (today === 5) text = "🔥 PROMO HOY VIERNES: 15% OFF en Crispy Chester!";
     else if (today === 6) text = "🔥 PROMO HOY SÁBADO: 15% OFF en Chesty!";
     else if (today === 0) text = "🔥 PROMO HOY DOMINGO: 15% OFF en Cheese & Bacon!";
@@ -827,8 +840,8 @@ function getItemPriceHTML(item) {
     const isBurger = menu.burgers.some(b => b.id === item.id) || menu.burgerOfMonth.some(b => b.id === item.id);
 
     if (today === 4) {
-        // Jueves: sello empanada en todas las burgers
-        if (isBurger) selloBadge = "🫔 + Empanada Incluida";
+        // Jueves: sello empanada en todas las burgers (si está activa)
+        if (isBurger && EMPANADA_PROMO_ACTIVE) selloBadge = "🫔 + Empanada Incluida";
         // 15% OFF en Clasica (id: 5)
         if (item.id === 5) {
             discountedPrice = Math.round(item.price * 0.85);
