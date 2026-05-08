@@ -3,7 +3,7 @@ const CURRENCY = "ARS";
 const CART_STORAGE_KEY = "chester-cart-v1";
 const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const BURGER_CUSTOMIZER_HASH = "#burger-customizer";
-const EMPANADA_PROMO_ACTIVE = false; // Cambiar a true cuando haya empanadas disponibles
+const EMPANADA_PROMO_ACTIVE = true; // Cambiar a true cuando haya empanadas disponibles
 
 let WHATSAPP_PHONE;
 let PICKUP_ADDRESS;
