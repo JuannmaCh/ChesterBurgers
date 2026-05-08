@@ -4,6 +4,7 @@ const CART_STORAGE_KEY = "chester-cart-v1";
 const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const BURGER_CUSTOMIZER_HASH = "#burger-customizer";
 const EMPANADA_PROMO_ACTIVE = false; // Cambiar a true cuando haya empanadas disponibles
+const FRIDAY_EMPANADA_SPECIAL = true; // Promo especial de empanada solo este viernes
 
 let WHATSAPP_PHONE;
 let PICKUP_ADDRESS;
@@ -86,9 +87,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.1.4").then(r => r.json()),
-            fetch("data/config.json?v=1.1.4").then(r => r.json()),
-            fetch("data/shipping.json?v=1.1.4").then(r => r.json())
+            fetch("data/menu.json?v=1.1.5").then(r => r.json()),
+            fetch("data/config.json?v=1.1.5").then(r => r.json()),
+            fetch("data/shipping.json?v=1.1.5").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -710,12 +711,38 @@ function getDailyPromoInfo(cartItems) {
             }
         }
     } else if (today === 5) {
-        // Viernes: 15% OFF Crispy Chester (id: 4)
-        const sub = eligibleSubtotalFor([4]);
-        if (sub > 0) {
-            promoDiscount = sub * 0.15;
-            promoReason = "15% OFF en Crispy Chester";
-            coveredSubtotal = sub;
+        // Viernes: empanada + 15% OFF Crispy Chester (si está activa la promo especial)
+        if (FRIDAY_EMPANADA_SPECIAL) {
+            let burgerCount = 0;
+            let burgerSubtotal = 0;
+            cartItems.forEach(item => {
+                const baseId = Number(String(item.key).split("-")[0]);
+                const isBurger = menu.burgers.some(b => b.id === baseId) || menu.burgerOfMonth.some(b => b.id === baseId);
+                if (isBurger) {
+                    burgerCount += item.qty;
+                    burgerSubtotal += item.unitPrice * item.qty;
+                }
+            });
+            if (burgerCount > 0) {
+                freeItems.push(`${burgerCount}x Empanada de bondiola desmenuzada`);
+                coveredSubtotal = burgerSubtotal;
+            }
+            const sub = eligibleSubtotalFor([4]);
+            if (sub > 0) {
+                promoDiscount = sub * 0.15;
+                promoReason = (burgerCount > 0 ? "Empanada incluida + " : "") + "15% OFF en Crispy Chester";
+                coveredSubtotal = burgerSubtotal;
+            } else if (burgerCount > 0) {
+                promoReason = "Empanada incluida";
+            }
+        } else {
+            // Sin empanada hoy, solo 15% OFF en Crispy Chester
+            const sub = eligibleSubtotalFor([4]);
+            if (sub > 0) {
+                promoDiscount = sub * 0.15;
+                promoReason = "15% OFF en Crispy Chester";
+                coveredSubtotal = sub;
+            }
         }
     } else if (today === 6) {
         // Sábado: 15% OFF Chesty (id: 7)
@@ -754,7 +781,9 @@ function updateDailyPromoBanner() {
     else if (today === 4) text = EMPANADA_PROMO_ACTIVE
         ? "🔥 PROMO HOY JUEVES: 🫔 ¡Empanada de bondiola desmenuzada incluida con cada burger! + 15% OFF en Clásica"
         : "🔥 PROMO HOY JUEVES: 15% OFF en Clásica!";
-    else if (today === 5) text = "🔥 PROMO HOY VIERNES: 15% OFF en Crispy Chester!";
+    else if (today === 5) text = FRIDAY_EMPANADA_SPECIAL
+        ? "🔥 PROMO HOY VIERNES: 🫔 ¡Empanada de bondiola desmenuzada incluida con cada burger! + 15% OFF en Crispy Chester"
+        : "🔥 PROMO HOY VIERNES: 15% OFF en Crispy Chester!";
     else if (today === 6) text = "🔥 PROMO HOY SÁBADO: 15% OFF en Chesty!";
     else if (today === 0) text = "🔥 PROMO HOY DOMINGO: 15% OFF en Cheese & Bacon!";
     
@@ -848,11 +877,15 @@ function getItemPriceHTML(item) {
             hasDiscount = true;
             discountBadge = "15% OFF";
         }
-    } else if (today === 5 && item.id === 4) {
-        // Viernes: 15% OFF Crispy Chester
-        discountedPrice = Math.round(item.price * 0.85);
-        hasDiscount = true;
-        discountBadge = "15% OFF";
+    } else if (today === 5) {
+        // Viernes: sello empanada en todas las burgers (si está activa la promo especial)
+        if (isBurger && FRIDAY_EMPANADA_SPECIAL) selloBadge = "🫔 + Empanada Incluida";
+        // 15% OFF en Crispy Chester (id: 4)
+        if (item.id === 4) {
+            discountedPrice = Math.round(item.price * 0.85);
+            hasDiscount = true;
+            discountBadge = "15% OFF";
+        }
     } else if (today === 6 && item.id === 7) {
         // Sabado: 15% OFF Chesty
         discountedPrice = Math.round(item.price * 0.85);
