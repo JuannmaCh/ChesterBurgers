@@ -88,9 +88,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.1.6").then(r => r.json()),
-            fetch("data/config.json?v=1.1.6").then(r => r.json()),
-            fetch("data/shipping.json?v=1.1.6").then(r => r.json())
+            fetch("data/menu.json?v=1.1.7").then(r => r.json()),
+            fetch("data/config.json?v=1.1.7").then(r => r.json()),
+            fetch("data/shipping.json?v=1.1.7").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -669,7 +669,7 @@ function getDailyPromoInfo(cartItems) {
         return sub;
     }
 
-    // Promo especial de aniversario (NO ACUMULABLE): 20% OFF en TODO
+    // Promo especial de aniversario (NO ACUMULABLE): 20% OFF en TODO (solo sábado)
     if (CHESTER_ANNIVERSARY_PROMO && today === 6) {
         const totalSubtotal = cartItems.reduce((sum, item) => sum + (item.unitPrice * item.qty), 0);
         promoDiscount = totalSubtotal * 0.20;
@@ -751,6 +751,16 @@ function getDailyPromoInfo(cartItems) {
                 coveredSubtotal = sub;
             }
         }
+    } else if (today === 6) {
+        // Sábado: 15% OFF Chesty (id: 7) - si no hay promo de aniversario
+        if (!CHESTER_ANNIVERSARY_PROMO) {
+            const sub = eligibleSubtotalFor([7]);
+            if (sub > 0) {
+                promoDiscount = sub * 0.15;
+                promoReason = "15% OFF en Chesty";
+                coveredSubtotal = sub;
+            }
+        }
     } else if (today === 0) {
         // Domingo: 15% OFF Cheese & Bacon (id: 2)
         const sub = eligibleSubtotalFor([2]);
@@ -776,9 +786,7 @@ function updateDailyPromoBanner() {
     
     const today = new Date().getDay();
     let text = "";
-    if (CHESTER_ANNIVERSARY_PROMO && today === 6) {
-        text = "🎉 ¡CHESTER CUMPLE 1 MES! 🎉 20% OFF EN TODO - ¡Única promo del día!";
-    } else if (today === 1) {
+    if (today === 1) {
         text = "🔥 PROMO HOY LUNES: 15% OFF en Oklahoma Burger (Burger del Mes)!";
     } else if (today === 4) {
         text = EMPANADA_PROMO_ACTIVE
@@ -788,10 +796,14 @@ function updateDailyPromoBanner() {
         text = FRIDAY_EMPANADA_SPECIAL
             ? "🔥 PROMO HOY VIERNES: 🫔 ¡Empanada de bondiola desmenuzada incluida con cada burger! + 15% OFF en Crispy Chester"
             : "🔥 PROMO HOY VIERNES: 15% OFF en Crispy Chester!";
+    } else if (today === 6) {
+        text = CHESTER_ANNIVERSARY_PROMO
+            ? "🎉 ¡CHESTER CUMPLE 1 MES! 🎉 20% OFF EN TODO - ¡Única promo del día!"
+            : "🔥 PROMO HOY SÁBADO: 15% OFF en Chesty!";
     } else if (today === 0) {
         text = "🔥 PROMO HOY DOMINGO: 15% OFF en Cheese & Bacon!";
     }
-
+    
     if (text) {
         banner.textContent = text;
         banner.hidden = false;
@@ -831,7 +843,7 @@ function calculateOrderSummary() {
     const dailyPromo = getDailyPromoInfo(cart);
     const today = new Date().getDay();
 
-    // Si es día de aniversario con promo especial, NO acumula con otros descuentos
+    // Si hay promo de aniversario activa (sábado), NO acumula con otros descuentos
     if (CHESTER_ANNIVERSARY_PROMO && today === 6) {
         const totalDiscount = dailyPromo.amount;
         const total = Math.max(0, subtotal + shipping - totalDiscount);
@@ -845,7 +857,7 @@ function calculateOrderSummary() {
             freeItems: dailyPromo.freeItems
         };
     }
-
+    
     // Caso normal: acumula descuentos
     const subtotalForBaseDiscount = Math.max(0, subtotal - (dailyPromo.coveredSubtotal || 0));
     const baseDiscountInfo = getDiscountInfo(subtotalForBaseDiscount, zoneCode, paymentMethod);
@@ -891,7 +903,7 @@ function getItemPriceHTML(item) {
 
     const isBurger = menu.burgers.some(b => b.id === item.id) || menu.burgerOfMonth.some(b => b.id === item.id);
 
-    // Promo de aniversario: 20% OFF EN TODO (NO acumulable)
+    // Promo de aniversario: 20% OFF EN TODO (solo sábado cuando está activa)
     if (CHESTER_ANNIVERSARY_PROMO && today === 6) {
         discountedPrice = Math.round(item.price * 0.80);
         hasDiscount = true;
@@ -914,6 +926,11 @@ function getItemPriceHTML(item) {
             hasDiscount = true;
             discountBadge = "15% OFF";
         }
+    } else if (today === 6 && item.id === 7 && !CHESTER_ANNIVERSARY_PROMO) {
+        // Sabado: 15% OFF Chesty (solo si NO hay promo de aniversario)
+        discountedPrice = Math.round(item.price * 0.85);
+        hasDiscount = true;
+        discountBadge = "15% OFF";
     } else if (today === 0 && item.id === 2) {
         // Domingo: 15% OFF Cheese & Bacon
         discountedPrice = Math.round(item.price * 0.85);
