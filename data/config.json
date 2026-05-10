@@ -14,7 +14,7 @@
     "openingHours": {
         "timezone": "America/Argentina/Buenos_Aires",
         "schedule": {
-            "sunday": { "open": "18:30", "close": "23:30" },
+            "sunday": { "open": "19:30", "close": "23:30" },
             "monday": { "open": "19:30", "close": "23:30" },
             "tuesday": null,
             "wednesday": null,
