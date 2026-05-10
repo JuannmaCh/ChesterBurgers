@@ -88,9 +88,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.1.9").then(r => r.json()),
-            fetch("data/config.json?v=1.1.9").then(r => r.json()),
-            fetch("data/shipping.json?v=1.1.9").then(r => r.json())
+            fetch("data/menu.json?v=1.2.0").then(r => r.json()),
+            fetch("data/config.json?v=1.2.0").then(r => r.json()),
+            fetch("data/shipping.json?v=1.2.0").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -314,7 +314,7 @@ function renderSimple(list, container, label, type) {
                 <h3>${item.name}</h3>
                 ${item.desc ? `<p>${item.desc}</p>` : ""}
                 ${stockBadge}
-                <div class="price-tag">${formatMoney(item.price)}</div>
+                ${getItemPriceHTML(item)}
             </div>
             <div class="cart-qty-badge-slot">${isOutOfStock ? "" : buildCartBadgeHTML(item.id, item.name)}</div>
             <button class="btn-add" type="button" data-action="add-item" data-id="${item.id}" data-type="${type}" aria-label="Anadir ${item.name}" ${isOutOfStock ? "disabled" : ""}>${buttonLabel}</button>
