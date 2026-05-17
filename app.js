@@ -5,7 +5,7 @@ const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const BURGER_CUSTOMIZER_HASH = "#burger-customizer";
 const EMPANADA_PROMO_ACTIVE = true; // Cambiar a false cuando haya empanadas disponibles
 const FRIDAY_EMPANADA_SPECIAL = false; // Promo especial de empanada solo viernes
-const CHESTER_ANNIVERSARY_PROMO = true; // Promo especial aniversario: 20% OFF TODO (NO acumulable). Cambiar a false después
+const CHESTER_ANNIVERSARY_PROMO = false; // Promo especial aniversario: 20% OFF TODO (NO acumulable). Cambiar a false después
 
 let WHATSAPP_PHONE;
 let PICKUP_ADDRESS;
