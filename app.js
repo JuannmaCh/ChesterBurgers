@@ -815,24 +815,6 @@ function updateDailyPromoBanner() {
 }
 
 function getDiscountInfo(subtotal, zoneCode, paymentMethod) {
-    if (subtotal <= 0) {
-        return { amount: 0, reason: "" };
-    }
-
-    if (zoneCode === "retiro") {
-        return {
-            amount: Math.round(subtotal * DISCOUNT_PERCENTAGE),
-            reason: "10% por take away"
-        };
-    }
-
-    if (paymentMethod === "efectivo") {
-        return {
-            amount: Math.round(subtotal * DISCOUNT_PERCENTAGE),
-            reason: "10% por efectivo"
-        };
-    }
-
     return { amount: 0, reason: "" };
 }
 
@@ -922,12 +904,6 @@ function getItemPriceHTML(item) {
     } else if (today === 5) {
         // Viernes: sello empanada en todas las burgers (si está activa la promo especial)
         if (isBurger && FRIDAY_EMPANADA_SPECIAL) selloBadge = "🫔 + Empanada Incluida";
-        // 15% OFF en Crispy Chester (id: 4)
-        if (item.id === 4) {
-            discountedPrice = Math.round(item.price * 0.85);
-            hasDiscount = true;
-            discountBadge = "15% OFF";
-        }
     } else if (today === 6 && item.id === 7 && !CHESTER_ANNIVERSARY_PROMO) {
         // Sabado: 15% OFF Chesty (solo si NO hay promo de aniversario)
         discountedPrice = Math.round(item.price * 0.85);

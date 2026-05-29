@@ -2,7 +2,7 @@
     "whatsappPhone": "5491124031761",
     "pickupAddress": "Chaco 150 esquina Maipu, Don Bosco, Buenos Aires, Argentina",
     "defaultItemImage": "assets/burger_chester.jpeg",
-    "discountPercentage": 0.1,
+    "discountPercentage": 0,
     "modifierPrices": {
         "notco": 0,
         "triple": 3000,
