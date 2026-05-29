@@ -389,9 +389,14 @@ function updateCustomizerPrice() {
     if (!currentBurgerToCustomize) return;
 
     const selectedModifiers = getSelectedBurgerModifiers();
-    const price = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, selectedModifiers);
-
-    burgerCustomizerPrice.textContent = `Precio: ${formatMoney(price)}`;
+    const normalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, selectedModifiers);
+    
+    if (currentBurgerToCustomize.price > 11500) {
+        const promoPrice = calculateCustomizedBurgerPrice(11500, selectedModifiers);
+        burgerCustomizerPrice.innerHTML = `Precio: <span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 8px;">${formatMoney(normalPrice)}</span> <span>${formatMoney(promoPrice)}</span> <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">PROMO</span>`;
+    } else {
+        burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
+    }
 }
 
 function confirmBurgerCustomizer() {
