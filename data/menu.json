@@ -19,8 +19,7 @@
         { "id": 7, "name": "Chesty", "price": 13000, "desc": "Doble medallon 100grs, cheddar, panceta, lechuga, tomate, cebolla, pepino y salsa chesty con pan de kalis", "image": "assets/burger_chesty.jpg", "inStock": true }
     ],
     "extras": [
-        { "id": 8, "name": "Papas Fritas", "price": 4500, "desc": "Porcion de 120grs", "image": "assets/papas_fritas.avif", "inStock": true },
-        { "id": 9, "name": "Aros de Cebolla", "price": 6000, "desc": "Porcion de 6 unidades", "image": "assets/aros_de_cebolla.webp", "inStock": false }
+        { "id": 8, "name": "Papas Fritas", "price": 4500, "desc": "Porcion de 120grs", "image": "assets/papas_fritas.avif", "inStock": true }
     ],
     "drinks": [
         { "id": 10, "name": "Coca Cola", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_coca.webp", "inStock": false },

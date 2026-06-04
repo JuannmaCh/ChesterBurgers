@@ -3,9 +3,6 @@ const CURRENCY = "ARS";
 const CART_STORAGE_KEY = "chester-cart-v1";
 const CUSTOMER_STORAGE_KEY = "chester-customer-v1";
 const BURGER_CUSTOMIZER_HASH = "#burger-customizer";
-const EMPANADA_PROMO_ACTIVE = true; // Cambiar a false cuando haya empanadas disponibles
-const FRIDAY_EMPANADA_SPECIAL = false; // Promo especial de empanada solo viernes
-const CHESTER_ANNIVERSARY_PROMO = false; // Promo especial aniversario: 20% OFF TODO (NO acumulable). Cambiar a false después
 
 let WHATSAPP_PHONE;
 let PICKUP_ADDRESS;
@@ -88,9 +85,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.2.1").then(r => r.json()),
-            fetch("data/config.json?v=1.2.1").then(r => r.json()),
-            fetch("data/shipping.json?v=1.2.1").then(r => r.json())
+            fetch("data/menu.json?v=1.2.2").then(r => r.json()),
+            fetch("data/config.json?v=1.2.2").then(r => r.json()),
+            fetch("data/shipping.json?v=1.2.2").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -267,7 +264,7 @@ function renderBurgers() {
     const burgersHeader = `
         <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid var(--red);">
             <p style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">
-                ✅ <strong>Todas las burgers vienen con papas incluidas</strong>
+                ✅ <strong>Todas las burgers vienen con papas fritas sazonadas incluidas</strong>
             </p>
             <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #666;">
                 💡 Opciones disponibles en todas:
@@ -613,7 +610,18 @@ function updateTotals() {
     const summary = calculateOrderSummary();
 
     subtotalPrice.textContent = formatMoney(summary.subtotal);
-    shippingPrice.textContent = formatMoney(summary.shipping);
+
+    // Mostrar "A confirmar" en lugar de precio de envío
+    const streetNumber = customerStreetNumberInput.value.trim();
+    const isPickup = deliveryZoneSelect.value === "retiro";
+    if (!isPickup && streetNumber) {
+        shippingPrice.textContent = "A confirmar por el local";
+    } else if (isPickup) {
+        shippingPrice.textContent = formatMoney(0);
+    } else {
+        shippingPrice.textContent = "Ingresa dirección para calcular";
+    }
+
     grandTotalPrice.textContent = formatMoney(summary.total);
 
 
@@ -662,27 +670,64 @@ function getDailyPromoInfo(cartItems) {
     let promoReason = "";
     let freeItems = [];
     let coveredSubtotal = 0;
+    const today = new Date().getDay();
 
-    let burgerDiscount = 0;
-    let burgerSubtotal = 0;
+    // Jueves (4): Promo "Empanada de bondiola desmenuzada"
+    if (today === 4) {
+        // Marcar que hay promo, pero no aplicar descuento de precio aquí
+        // Será manejado en updateDailyPromoBanner
+        promoReason = "Jueves - Promo Empanada de bondiola desmenuzada";
+        return {
+            amount: 0,
+            reason: promoReason,
+            freeItems: freeItems,
+            coveredSubtotal: 0
+        };
+    }
 
-    cartItems.forEach(item => {
-        const baseId = Number(String(item.key).split("-")[0]);
-        const isBurger = menu.burgers.some(b => b.id === baseId) || menu.burgerOfMonth.some(b => b.id === baseId);
-        if (isBurger) {
-            const baseBurger = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
-            if (baseBurger) {
-                const discountPerBurger = Math.max(0, baseBurger.price - 11500);
-                burgerDiscount += discountPerBurger * item.qty;
-                burgerSubtotal += item.unitPrice * item.qty;
+    // Viernes (5): 15% descuento en "Crispy Chester" (id: 4)
+    if (today === 5) {
+        cartItems.forEach(item => {
+            const baseId = Number(String(item.key).split("-")[0]);
+            if (baseId === 4) {
+                const discountAmount = Math.round(item.unitPrice * 0.15);
+                promoDiscount += discountAmount * item.qty;
+                coveredSubtotal += item.unitPrice * item.qty;
             }
+        });
+        if (promoDiscount > 0) {
+            promoReason = "15% OFF Crispy Chester";
         }
-    });
+    }
 
-    if (burgerDiscount > 0) {
-        promoDiscount = burgerDiscount;
-        promoReason = "Todas las Burgers a $11.500";
-        coveredSubtotal = burgerSubtotal;
+    // Sábado (6): 15% descuento en "Chesty" (id: 7)
+    if (today === 6) {
+        cartItems.forEach(item => {
+            const baseId = Number(String(item.key).split("-")[0]);
+            if (baseId === 7) {
+                const discountAmount = Math.round(item.unitPrice * 0.15);
+                promoDiscount += discountAmount * item.qty;
+                coveredSubtotal += item.unitPrice * item.qty;
+            }
+        });
+        if (promoDiscount > 0) {
+            promoReason = "15% OFF Chesty";
+        }
+    }
+
+    // Domingo (0): 15% descuento en "Clásica" (id: 5)
+    if (today === 0) {
+        cartItems.forEach(item => {
+            const baseId = Number(String(item.key).split("-")[0]);
+            if (baseId === 5) {
+                const discountAmount = Math.round(item.unitPrice * 0.15);
+                promoDiscount += discountAmount * item.qty;
+                coveredSubtotal += item.unitPrice * item.qty;
+            }
+        });
+        if (promoDiscount > 0) {
+            promoReason = "15% OFF Clásica";
+        }
     }
 
     return {
@@ -698,42 +743,44 @@ function updateDailyPromoBanner() {
     const banner = document.getElementById("daily-promo-banner");
     if (!banner) return;
     
-    banner.textContent = "PROMO: TODAS LAS BURGERS A $11.500 POR TIEMPO LIMITADO";
+    const today = new Date().getDay();
+    const DAY_LABELS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+    let promoText = "";
+
+    if (today === 4) {
+        promoText = "🎉 JUEVES: Lleva una Empanada de bondiola desmenuzada GRATIS con tu compra";
+    } else if (today === 5) {
+        promoText = "🍔 VIERNES: 15% OFF en Crispy Chester";
+    } else if (today === 6) {
+        promoText = "🍔 SÁBADO: 15% OFF en Chesty";
+    } else if (today === 0) {
+        promoText = "🍔 DOMINGO: 15% OFF en Clásica";
+    } else {
+        // Lunes, Martes, Miércoles: Sin promo
+        banner.hidden = true;
+        return;
+    }
+
+    banner.textContent = promoText;
     banner.hidden = false;
 }
 
-function getDiscountInfo(subtotal, zoneCode, paymentMethod) {
+function getDiscountInfo() {
     return { amount: 0, reason: "" };
 }
 
 function calculateOrderSummary() {
     const subtotal = getCartSubtotal();
-    const zoneCode = deliveryZoneSelect.value;
     const shipping = getShippingCost();
     const paymentMethod = paymentMethodSelect.value;
     
     const dailyPromo = getDailyPromoInfo(cart);
-    const today = new Date().getDay();
 
-    // Si hay promo de aniversario activa (domingo), NO acumula con otros descuentos
-    if (CHESTER_ANNIVERSARY_PROMO && today === 0) {
-        const totalDiscount = dailyPromo.amount;
-        const total = Math.max(0, subtotal + shipping - totalDiscount);
-        return {
-            subtotal,
-            shipping,
-            discount: totalDiscount,
-            discountReason: dailyPromo.reason,
-            paymentMethod,
-            total,
-            freeItems: dailyPromo.freeItems
-        };
-    }
-    
-    // Caso normal: acumula descuentos
+    // Acumula descuentos (diarios + otros si aplica)
     const subtotalForBaseDiscount = Math.max(0, subtotal - (dailyPromo.coveredSubtotal || 0));
-    const baseDiscountInfo = getDiscountInfo(subtotalForBaseDiscount, zoneCode, paymentMethod);
-    
+    const baseDiscountInfo = getDiscountInfo();
+
     const totalDiscount = baseDiscountInfo.amount + dailyPromo.amount;
     let reasons = [];
     if (dailyPromo.reason) reasons.push(dailyPromo.reason);
@@ -771,15 +818,29 @@ function getItemPriceHTML(item) {
     let discountedPrice = item.price;
     let hasDiscount = false;
     let discountBadge = "";
-    let selloBadge = "";
 
     const isBurger = menu.burgers.some(b => b.id === item.id) || menu.burgerOfMonth.some(b => b.id === item.id);
 
-    // Promo: Todas las burgers a 11500
+    // Aplicar descuentos basados en el día
     if (isBurger) {
-        discountedPrice = 11500;
-        hasDiscount = item.price > 11500;
-        discountBadge = "PROMO";
+        // Viernes (5): 15% OFF en Crispy Chester (id: 4)
+        if (today === 5 && item.id === 4) {
+            discountedPrice = Math.round(item.price * 0.85);
+            hasDiscount = true;
+            discountBadge = "15% OFF";
+        }
+        // Sábado (6): 15% OFF en Chesty (id: 7)
+        else if (today === 6 && item.id === 7) {
+            discountedPrice = Math.round(item.price * 0.85);
+            hasDiscount = true;
+            discountBadge = "15% OFF";
+        }
+        // Domingo (0): 15% OFF en Clásica (id: 5)
+        else if (today === 0 && item.id === 5) {
+            discountedPrice = Math.round(item.price * 0.85);
+            hasDiscount = true;
+            discountBadge = "15% OFF";
+        }
     }
 
     let priceContent = hasDiscount
@@ -788,9 +849,6 @@ function getItemPriceHTML(item) {
             <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${discountBadge}</span>`
         : `<span>${formatMoney(item.price)}</span>`;
 
-    if (selloBadge) {
-        priceContent += ` <span style="background: var(--red); color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${selloBadge}</span>`;
-    }
 
     return `<div class="price-tag">${priceContent}</div>`;
 }
@@ -816,10 +874,8 @@ function sendOrder() {
         return;
     }
 
-    const zoneCode = deliveryZoneSelect.value;
-    const zoneData = SHIPPING_ZONES[zoneCode];
     const summary = calculateOrderSummary();
-    const isPickup = zoneCode === "retiro";
+    const isPickup = deliveryZoneSelect.value === "retiro";
     const streetNumber = customerStreetNumberInput.value.trim();
     const neighborhood = customerNeighborhoodSelect.value;
     const betweenStreets = customerBetweenStreetsInput.value.trim();
@@ -833,7 +889,6 @@ function sendOrder() {
         "",
         `Cliente: ${customerNameInput.value.trim()}`,
         `${isPickup ? "Take away en" : "Direccion"}: ${orderAddress}`,
-        `Zona: ${zoneData.label}`,
         `Metodo de pago: ${formatPaymentMethod(summary.paymentMethod)}`,
         ""
     ];
@@ -856,7 +911,7 @@ function sendOrder() {
     lines.push(
         "",
         `SUBTOTAL: ${formatMoney(summary.subtotal)}`,
-        `ENVIO: ${formatMoney(summary.shipping)}`
+        `ENVIO: A confirmar por el local`
     );
 
     if (summary.discount > 0) {
@@ -938,20 +993,12 @@ function validateCheckout() {
     const streetNumber = customerStreetNumberInput.value.trim();
     const neighborhood = customerNeighborhoodSelect.value;
     const betweenStreets = customerBetweenStreetsInput.value.trim();
-    const zone = deliveryZoneSelect.value;
     const paymentMethod = paymentMethodSelect.value;
 
     if (name.length < 2) {
         markFieldInvalid(customerNameInput);
         showFeedback("Ingresa tu nombre para continuar");
         customerNameInput.focus();
-        return false;
-    }
-
-    if (!zone || !SHIPPING_ZONES[zone]) {
-        markFieldInvalid(deliveryZoneSelect);
-        showFeedback("Selecciona tu zona para calcular envio");
-        deliveryZoneSelect.focus();
         return false;
     }
 
@@ -962,10 +1009,12 @@ function validateCheckout() {
         return false;
     }
 
-    if (zone === "retiro") {
+    // Si es take away (retiro), no necesita dirección
+    if (deliveryZoneSelect.value === "retiro") {
         return true;
     }
 
+    // Si es delivery, requiere dirección válida
     if (!STREET_AND_NUMBER_REGEX.test(streetNumber)) {
         markFieldInvalid(customerStreetNumberInput);
         showFeedback("Ingresa una direccion valida (calle y numero)");
@@ -1158,10 +1207,6 @@ function updateDeliveryModeUI() {
     const isPickup = deliveryZoneSelect.value === "retiro";
     const hasZone = deliveryZoneSelect.value !== "";
 
-    const efectivoOption = document.querySelector("#payment-method option[value='efectivo']");
-    if (efectivoOption) {
-        efectivoOption.textContent = isPickup ? "Efectivo" : "Efectivo (10% OFF)";
-    }
 
     const zoneDependentFields = document.getElementById("checkout-zone-dependent");
     if (zoneDependentFields) {
