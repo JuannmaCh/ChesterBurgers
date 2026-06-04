@@ -388,12 +388,7 @@ function updateCustomizerPrice() {
     const selectedModifiers = getSelectedBurgerModifiers();
     const normalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, selectedModifiers);
     
-    if (currentBurgerToCustomize.price > 11500) {
-        const promoPrice = calculateCustomizedBurgerPrice(11500, selectedModifiers);
-        burgerCustomizerPrice.innerHTML = `Precio: <span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 8px;">${formatMoney(normalPrice)}</span> <span>${formatMoney(promoPrice)}</span> <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">PROMO</span>`;
-    } else {
-        burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
-    }
+    burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
 }
 
 function confirmBurgerCustomizer() {
@@ -612,14 +607,13 @@ function updateTotals() {
     subtotalPrice.textContent = formatMoney(summary.subtotal);
 
     // Mostrar "A confirmar" en lugar de precio de envío
-    const streetNumber = customerStreetNumberInput.value.trim();
     const isPickup = deliveryZoneSelect.value === "retiro";
-    if (!isPickup && streetNumber) {
+    if (deliveryZoneSelect.value === "delivery") {
         shippingPrice.textContent = "A confirmar por el local";
     } else if (isPickup) {
         shippingPrice.textContent = formatMoney(0);
     } else {
-        shippingPrice.textContent = "Ingresa dirección para calcular";
+        shippingPrice.textContent = "Selecciona tipo de envío";
     }
 
     grandTotalPrice.textContent = formatMoney(summary.total);

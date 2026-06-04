@@ -1,5 +1,4 @@
 {
-    "centro": { "label": "Zona 1 (hasta 2.5 km)", "price": 1000 },
-    "norte":  { "label": "Zona 2 (de 2.5 km a 4 km)", "price": 2000 },
+    "delivery": { "label": "Delivery", "price": 0 },
     "retiro": { "label": "Take away", "price": 0 }
 }
