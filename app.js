@@ -85,9 +85,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.2.6").then(r => r.json()),
-            fetch("data/config.json?v=1.2.6").then(r => r.json()),
-            fetch("data/shipping.json?v=1.2.6").then(r => r.json())
+            fetch("data/menu.json?v=1.2.7").then(r => r.json()),
+            fetch("data/config.json?v=1.2.7").then(r => r.json()),
+            fetch("data/shipping.json?v=1.2.7").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -325,7 +325,34 @@ function renderCart() {
         cartItems.innerHTML = '<p class="cart-empty">Todavia no agregaste productos.</p>';
     } else {
         cartItems.innerHTML = cart.map((item) => {
-            const subtotal = item.unitPrice * item.qty;
+            const baseId = Number(String(item.key).split("-")[0]);
+            const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
+            
+            const today = new Date().getDay();
+            let discountAmount = 0;
+            let hasDiscount = false;
+
+            if (baseItem) {
+                if (today === 5 && baseId === 4) {
+                    discountAmount = Math.round(baseItem.price * 0.15);
+                    hasDiscount = true;
+                } else if (today === 6 && baseId === 7) {
+                    discountAmount = Math.round(baseItem.price * 0.15);
+                    hasDiscount = true;
+                } else if (today === 0 && baseId === 5) {
+                    discountAmount = Math.round(baseItem.price * 0.15);
+                    hasDiscount = true;
+                }
+            }
+
+            const originalSubtotal = item.unitPrice * item.qty;
+            const discountedSubtotal = (item.unitPrice - discountAmount) * item.qty;
+
+            const subtotalHTML = hasDiscount 
+                ? `<div style="text-decoration: line-through; color: #999; font-size: 0.8rem;">${formatMoney(originalSubtotal)}</div>
+                   <div>${formatMoney(discountedSubtotal)} <span style="background: #1f7a2e; color: #fff; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; vertical-align: middle;">15% OFF</span></div>`
+                : `${formatMoney(originalSubtotal)}`;
+
             const imageSrc = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
             return `
                 <div class="cart-row">
@@ -340,14 +367,15 @@ function renderCart() {
                         <span class="qty-value">${item.qty}</span>
                         <button type="button" class="qty-btn" data-action="increase-qty" data-key="${item.key}" aria-label="Aumentar cantidad de ${item.name}">+</button>
                         <button type="button" class="btn-remove" data-action="remove-item" data-key="${item.key}" aria-label="Quitar ${item.name}">Quitar</button>
-                        <div class="cart-subtotal">${formatMoney(subtotal)}</div>
+                        <div class="cart-subtotal" style="text-align: right; display: flex; flex-direction: column; justify-content: center; align-items: flex-end; min-width: 80px;">${subtotalHTML}</div>
                     </div>
                 </div>
             `;
         }).join("");
     }
 
-    cartDrawerSubtotal.textContent = formatMoney(getCartSubtotal());
+    const dailyPromo = getDailyPromoInfo(cart);
+    cartDrawerSubtotal.textContent = formatMoney(getCartSubtotal() - dailyPromo.amount);
     updateTotals();
 }
 
