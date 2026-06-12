@@ -457,6 +457,11 @@ function confirmBurgerCustomizer() {
     const finalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, modifiers);
     const displayName = buildCustomizedBurgerName(currentBurgerToCustomize.name, modifiers);
 
+    const modifierNames = modifiers.map(key => BURGER_MODIFIER_META[key]?.displayLabel || key).join(', ');
+    gtag('event', 'customize_burger', {
+        modifiers: modifierNames
+    });
+
     addToCart({
         key: createCartKey(currentBurgerToCustomize.id, modifiers),
         name: displayName,
@@ -573,6 +578,17 @@ function resetButtonFeedbackState(button) {
 }
 
 function addToCart({ key, name, unitPrice, image = "" }) {
+    gtag('event', 'add_to_cart', {
+        currency: 'ARS',
+        value: unitPrice,
+        items: [
+            {
+                item_name: name,
+                price: unitPrice
+            }
+        ]
+    });
+
     const existingItem = cart.find((item) => item.key === key);
     const safeImage = image || getItemImageFromKey(key) || DEFAULT_ITEM_IMAGE;
 
@@ -601,6 +617,21 @@ function changeQty(key, delta) {
 }
 
 function removeItem(key) {
+    const item = cart.find((current) => current.key === key);
+    if (item) {
+        gtag('event', 'remove_from_cart', {
+            currency: 'ARS',
+            value: item.unitPrice * item.qty,
+            items: [
+                {
+                    item_name: item.name,
+                    price: item.unitPrice,
+                    quantity: item.qty
+                }
+            ]
+        });
+    }
+
     cart = cart.filter((item) => item.key !== key);
     persistAndRefresh("Item eliminado del carrito");
 }
@@ -979,6 +1010,13 @@ function sendOrder() {
     const encodedMessage = encodeURIComponent(lines.join("\n"));
     const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodedMessage}`;
     closeCheckout();
+
+    gtag('event', 'purchase', {
+        transaction_id: 'WPP_' + Date.now(),
+        value: summary.total,
+        currency: 'ARS'
+    });
+
     window.open(whatsappUrl, "_blank", "noopener");
     cart = [];
     persistAndRefresh("Pedido enviado. Carrito vaciado");
@@ -994,6 +1032,11 @@ function openCheckout() {
         showFeedback("Estamos cerrados. Por favor, intenta más tarde.");
         return;
     }
+
+    gtag('event', 'begin_checkout', {
+        currency: 'ARS',
+        value: getCartSubtotal()
+    });
 
     closeCartDrawer();
     updateTotals();
@@ -1055,6 +1098,7 @@ function validateCheckout() {
         markFieldInvalid(customerNameInput);
         showFeedback("Ingresa tu nombre para continuar");
         customerNameInput.focus();
+        gtag('event', 'checkout_error', { field: 'falta_nombre' });
         return false;
     }
 
@@ -1062,11 +1106,14 @@ function validateCheckout() {
         markFieldInvalid(paymentMethodSelect);
         showFeedback("Selecciona un metodo de pago para continuar");
         paymentMethodSelect.focus();
+        gtag('event', 'checkout_error', { field: 'falta_metodo_pago' });
         return false;
     }
 
     // Si es take away (retiro), no necesita dirección
     if (deliveryZoneSelect.value === "retiro") {
+        gtag('event', 'add_shipping_info', { shipping_tier: deliveryZoneSelect.value });
+        gtag('event', 'add_payment_info', { payment_type: paymentMethodSelect.value });
         return true;
     }
 
@@ -1075,6 +1122,7 @@ function validateCheckout() {
         markFieldInvalid(customerStreetNumberInput);
         showFeedback("Ingresa una direccion valida (calle y numero)");
         customerStreetNumberInput.focus();
+        gtag('event', 'checkout_error', { field: 'falta_direccion' });
         return false;
     }
 
@@ -1082,6 +1130,7 @@ function validateCheckout() {
         markFieldInvalid(customerNeighborhoodSelect);
         showFeedback("Selecciona un barrio para continuar");
         customerNeighborhoodSelect.focus();
+        gtag('event', 'checkout_error', { field: 'falta_barrio' });
         return false;
     }
 
@@ -1089,9 +1138,12 @@ function validateCheckout() {
         markFieldInvalid(customerBetweenStreetsInput);
         showFeedback("Ingresa las entre calles para continuar");
         customerBetweenStreetsInput.focus();
+        gtag('event', 'checkout_error', { field: 'falta_entre_calles' });
         return false;
     }
 
+    gtag('event', 'add_shipping_info', { shipping_tier: deliveryZoneSelect.value });
+    gtag('event', 'add_payment_info', { payment_type: paymentMethodSelect.value });
     return true;
 }
 
