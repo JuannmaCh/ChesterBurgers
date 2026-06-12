@@ -85,9 +85,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.2.5").then(r => r.json()),
-            fetch("data/config.json?v=1.2.5").then(r => r.json()),
-            fetch("data/shipping.json?v=1.2.5").then(r => r.json())
+            fetch("data/menu.json?v=1.2.6").then(r => r.json()),
+            fetch("data/config.json?v=1.2.6").then(r => r.json()),
+            fetch("data/shipping.json?v=1.2.6").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -396,19 +396,21 @@ function updateCustomizerPrice() {
     const isBurger = menu.burgers.some(b => b.id === currentBurgerToCustomize.id) || menu.burgerOfMonth.some(b => b.id === currentBurgerToCustomize.id);
 
     if (isBurger) {
+        let baseDiscountAmount = 0;
         if (today === 5 && currentBurgerToCustomize.id === 4) {
-            discountedPrice = Math.round(normalPrice * 0.85);
+            baseDiscountAmount = Math.round(currentBurgerToCustomize.price * 0.15);
             hasDiscount = true;
             discountBadge = "15% OFF";
         } else if (today === 6 && currentBurgerToCustomize.id === 7) {
-            discountedPrice = Math.round(normalPrice * 0.85);
+            baseDiscountAmount = Math.round(currentBurgerToCustomize.price * 0.15);
             hasDiscount = true;
             discountBadge = "15% OFF";
         } else if (today === 0 && currentBurgerToCustomize.id === 5) {
-            discountedPrice = Math.round(normalPrice * 0.85);
+            baseDiscountAmount = Math.round(currentBurgerToCustomize.price * 0.15);
             hasDiscount = true;
             discountBadge = "15% OFF";
         }
+        discountedPrice = normalPrice - baseDiscountAmount;
     }
 
     if (hasDiscount) {
@@ -713,7 +715,8 @@ function getDailyPromoInfo(cartItems) {
         cartItems.forEach(item => {
             const baseId = Number(String(item.key).split("-")[0]);
             if (baseId === 4) {
-                const discountAmount = Math.round(item.unitPrice * 0.15);
+                const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
+                const discountAmount = baseItem ? Math.round(baseItem.price * 0.15) : Math.round(item.unitPrice * 0.15);
                 promoDiscount += discountAmount * item.qty;
                 coveredSubtotal += item.unitPrice * item.qty;
             }
@@ -728,7 +731,8 @@ function getDailyPromoInfo(cartItems) {
         cartItems.forEach(item => {
             const baseId = Number(String(item.key).split("-")[0]);
             if (baseId === 7) {
-                const discountAmount = Math.round(item.unitPrice * 0.15);
+                const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
+                const discountAmount = baseItem ? Math.round(baseItem.price * 0.15) : Math.round(item.unitPrice * 0.15);
                 promoDiscount += discountAmount * item.qty;
                 coveredSubtotal += item.unitPrice * item.qty;
             }
@@ -743,7 +747,8 @@ function getDailyPromoInfo(cartItems) {
         cartItems.forEach(item => {
             const baseId = Number(String(item.key).split("-")[0]);
             if (baseId === 5) {
-                const discountAmount = Math.round(item.unitPrice * 0.15);
+                const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
+                const discountAmount = baseItem ? Math.round(baseItem.price * 0.15) : Math.round(item.unitPrice * 0.15);
                 promoDiscount += discountAmount * item.qty;
                 coveredSubtotal += item.unitPrice * item.qty;
             }
