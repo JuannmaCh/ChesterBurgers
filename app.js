@@ -85,9 +85,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.2.4").then(r => r.json()),
-            fetch("data/config.json?v=1.2.4").then(r => r.json()),
-            fetch("data/shipping.json?v=1.2.4").then(r => r.json())
+            fetch("data/menu.json?v=1.2.5").then(r => r.json()),
+            fetch("data/config.json?v=1.2.5").then(r => r.json()),
+            fetch("data/shipping.json?v=1.2.5").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -388,7 +388,36 @@ function updateCustomizerPrice() {
     const selectedModifiers = getSelectedBurgerModifiers();
     const normalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, selectedModifiers);
     
-    burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
+    const today = new Date().getDay();
+    let discountedPrice = normalPrice;
+    let hasDiscount = false;
+    let discountBadge = "";
+
+    const isBurger = menu.burgers.some(b => b.id === currentBurgerToCustomize.id) || menu.burgerOfMonth.some(b => b.id === currentBurgerToCustomize.id);
+
+    if (isBurger) {
+        if (today === 5 && currentBurgerToCustomize.id === 4) {
+            discountedPrice = Math.round(normalPrice * 0.85);
+            hasDiscount = true;
+            discountBadge = "15% OFF";
+        } else if (today === 6 && currentBurgerToCustomize.id === 7) {
+            discountedPrice = Math.round(normalPrice * 0.85);
+            hasDiscount = true;
+            discountBadge = "15% OFF";
+        } else if (today === 0 && currentBurgerToCustomize.id === 5) {
+            discountedPrice = Math.round(normalPrice * 0.85);
+            hasDiscount = true;
+            discountBadge = "15% OFF";
+        }
+    }
+
+    if (hasDiscount) {
+        burgerCustomizerPrice.innerHTML = `Precio: <span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(normalPrice)}</span>
+            <span>${formatMoney(discountedPrice)}</span>
+            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${discountBadge}</span>`;
+    } else {
+        burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
+    }
 }
 
 function confirmBurgerCustomizer() {
