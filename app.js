@@ -85,9 +85,9 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.2.3").then(r => r.json()),
-            fetch("data/config.json?v=1.2.3").then(r => r.json()),
-            fetch("data/shipping.json?v=1.2.3").then(r => r.json())
+            fetch("data/menu.json?v=1.2.4").then(r => r.json()),
+            fetch("data/config.json?v=1.2.4").then(r => r.json()),
+            fetch("data/shipping.json?v=1.2.4").then(r => r.json())
         ]);
 
         menu = menuData;
