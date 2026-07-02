@@ -756,19 +756,6 @@ function getDailyPromoInfo(cartItems) {
     let coveredSubtotal = 0;
     const today = new Date().getDay();
 
-    // Jueves (4): Promo "Empanada de bondiola desmenuzada"
-    if (today === 4) {
-        // Marcar que hay promo, pero no aplicar descuento de precio aquí
-        // Será manejado en updateDailyPromoBanner
-        promoReason = "Jueves - Promo Empanada de bondiola desmenuzada";
-        return {
-            amount: 0,
-            reason: promoReason,
-            freeItems: freeItems,
-            coveredSubtotal: 0
-        };
-    }
-
     // Viernes (5): 15% descuento en "Crispy Chester" (id: 4)
     if (today === 5) {
         cartItems.forEach(item => {
@@ -835,16 +822,14 @@ function updateDailyPromoBanner() {
 
     let promoText = "";
 
-    if (today === 4) {
-        promoText = "🎉 JUEVES: Lleva una Empanada de bondiola desmenuzada GRATIS con tu compra";
-    } else if (today === 5) {
+    if (today === 5) {
         promoText = "🍔 VIERNES: 15% OFF en Crispy Chester";
     } else if (today === 6) {
         promoText = "🍔 SÁBADO: 15% OFF en Chesty";
     } else if (today === 0) {
         promoText = "🍔 DOMINGO: 15% OFF en Clásica";
     } else {
-        // Lunes, Martes, Miércoles: Sin promo
+        // Lunes, Martes, Miércoles, Jueves: Sin promo
         banner.hidden = true;
         return;
     }
