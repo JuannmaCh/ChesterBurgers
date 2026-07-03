@@ -11,6 +11,9 @@ let DISCOUNT_PERCENTAGE;
 let CONFIG_PRICES;
 let SHIPPING_ZONES;
 let menu;
+let promotions = [];
+
+const ARGENTINA_TZ = "America/Argentina/Buenos_Aires";
 
 const BURGER_MODIFIER_META = {
     notco: { inputId: "customizer-notco", displayLabel: "NotCo", nameSuffix: " (NotCo)" },
@@ -84,13 +87,15 @@ let currentBurgerToCustomize = null;
 
 async function init() {
     try {
-        const [menuData, configData, shippingData] = await Promise.all([
-            fetch("data/menu.json?v=1.2.8").then(r => r.json()),
-            fetch("data/config.json?v=1.2.8").then(r => r.json()),
-            fetch("data/shipping.json?v=1.2.8").then(r => r.json())
+        const [menuData, configData, shippingData, promotionsData] = await Promise.all([
+            fetch("data/menu.json?v=1.2.9").then(r => r.json()),
+            fetch("data/config.json?v=1.2.9").then(r => r.json()),
+            fetch("data/shipping.json?v=1.2.9").then(r => r.json()),
+            fetch("data/promotions.json?v=1.2.9").then(r => r.json())
         ]);
 
         menu = menuData;
+        promotions = promotionsData.promotions || [];
         WHATSAPP_PHONE = configData.whatsappPhone;
         PICKUP_ADDRESS = configData.pickupAddress;
         DEFAULT_ITEM_IMAGE = configData.defaultItemImage;
@@ -325,32 +330,13 @@ function renderCart() {
         cartItems.innerHTML = '<p class="cart-empty">Todavia no agregaste productos.</p>';
     } else {
         cartItems.innerHTML = cart.map((item) => {
-            const baseId = Number(String(item.key).split("-")[0]);
-            const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
-            
-            const today = new Date().getDay();
-            let discountAmount = 0;
-            let hasDiscount = false;
-
-            if (baseItem) {
-                if (today === 5 && baseId === 4) {
-                    discountAmount = Math.round(baseItem.price * 0.15);
-                    hasDiscount = true;
-                } else if (today === 6 && baseId === 7) {
-                    discountAmount = Math.round(baseItem.price * 0.15);
-                    hasDiscount = true;
-                } else if (today === 0 && baseId === 5) {
-                    discountAmount = Math.round(baseItem.price * 0.15);
-                    hasDiscount = true;
-                }
-            }
-
+            const promoDisplay = getCartItemPromoDisplay(item);
             const originalSubtotal = item.unitPrice * item.qty;
-            const discountedSubtotal = (item.unitPrice - discountAmount) * item.qty;
+            const discountedSubtotal = (item.unitPrice - promoDisplay.discountAmount) * item.qty;
 
-            const subtotalHTML = hasDiscount 
+            const subtotalHTML = promoDisplay.hasDiscount
                 ? `<div style="text-decoration: line-through; color: #999; font-size: 0.8rem;">${formatMoney(originalSubtotal)}</div>
-                   <div>${formatMoney(discountedSubtotal)} <span style="background: #1f7a2e; color: #fff; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; vertical-align: middle;">15% OFF</span></div>`
+                   <div>${formatMoney(discountedSubtotal)} <span style="background: #1f7a2e; color: #fff; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; vertical-align: middle;">${promoDisplay.discountBadge}</span></div>`
                 : `${formatMoney(originalSubtotal)}`;
 
             const imageSrc = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
@@ -415,36 +401,12 @@ function updateCustomizerPrice() {
 
     const selectedModifiers = getSelectedBurgerModifiers();
     const normalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, selectedModifiers);
-    
-    const today = new Date().getDay();
-    let discountedPrice = normalPrice;
-    let hasDiscount = false;
-    let discountBadge = "";
+    const promoDisplay = getCustomizerPromoDisplay(currentBurgerToCustomize, normalPrice);
 
-    const isBurger = menu.burgers.some(b => b.id === currentBurgerToCustomize.id) || menu.burgerOfMonth.some(b => b.id === currentBurgerToCustomize.id);
-
-    if (isBurger) {
-        let baseDiscountAmount = 0;
-        if (today === 5 && currentBurgerToCustomize.id === 4) {
-            baseDiscountAmount = Math.round(currentBurgerToCustomize.price * 0.15);
-            hasDiscount = true;
-            discountBadge = "15% OFF";
-        } else if (today === 6 && currentBurgerToCustomize.id === 7) {
-            baseDiscountAmount = Math.round(currentBurgerToCustomize.price * 0.15);
-            hasDiscount = true;
-            discountBadge = "15% OFF";
-        } else if (today === 0 && currentBurgerToCustomize.id === 5) {
-            baseDiscountAmount = Math.round(currentBurgerToCustomize.price * 0.15);
-            hasDiscount = true;
-            discountBadge = "15% OFF";
-        }
-        discountedPrice = normalPrice - baseDiscountAmount;
-    }
-
-    if (hasDiscount) {
+    if (promoDisplay.hasDiscount) {
         burgerCustomizerPrice.innerHTML = `Precio: <span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(normalPrice)}</span>
-            <span>${formatMoney(discountedPrice)}</span>
-            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${discountBadge}</span>`;
+            <span>${formatMoney(promoDisplay.discountedPrice)}</span>
+            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${promoDisplay.discountBadge}</span>`;
     } else {
         burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
     }
@@ -749,92 +711,266 @@ function getShippingCost() {
     return SHIPPING_ZONES[zone].price;
 }
 
-function getDailyPromoInfo(cartItems) {
-    let promoDiscount = 0;
-    let promoReason = "";
-    let freeItems = [];
+function getArgentinaDate() {
+    const now = new Date();
+    const dateString = new Intl.DateTimeFormat("en-CA", { timeZone: ARGENTINA_TZ }).format(now);
+    const dayIndex = new Date(now.toLocaleString("en-US", { timeZone: ARGENTINA_TZ })).getDay();
+    return { dayIndex, dateString };
+}
+
+function getActivePromotions() {
+    const { dayIndex, dateString } = getArgentinaDate();
+    return promotions.filter((promo) => {
+        if (promo.active === false) return false;
+        if (promo.dates && promo.dates.length) {
+            return promo.dates.includes(dateString);
+        }
+        if (promo.days && promo.days.length) {
+            return promo.days.includes(dayIndex);
+        }
+        return false;
+    });
+}
+
+function getBaseItemById(id) {
+    return menu.burgers.find((b) => b.id === id)
+        || menu.burgerOfMonth.find((b) => b.id === id)
+        || menu.extras.find((e) => e.id === id)
+        || menu.drinks.find((d) => d.id === id);
+}
+
+function isBurgerId(id) {
+    return menu.burgers.some((b) => b.id === id) || menu.burgerOfMonth.some((b) => b.id === id);
+}
+
+function getCartBaseId(cartItem) {
+    return Number(String(cartItem.key).split("-")[0]);
+}
+
+function getPercentOffForItem(item, activePromos) {
+    if (!item || item.id == null) return null;
+
+    const percentPromos = activePromos.filter((promo) => promo.type === "percent_off");
+    let best = null;
+
+    for (const promo of percentPromos) {
+        if (!promo.itemIds.includes(item.id)) continue;
+
+        const discountAmount = promo.basePriceOnly
+            ? Math.round(item.price * promo.percent / 100)
+            : Math.round(item.price * promo.percent / 100);
+
+        if (!best || discountAmount > best.discountAmount) {
+            best = {
+                discountAmount,
+                badge: `${promo.percent}% OFF`,
+                reason: promo.reason
+            };
+        }
+    }
+
+    return best;
+}
+
+function getItemPromoDisplay(item) {
+    const percentOff = getPercentOffForItem(item, getActivePromotions());
+    if (percentOff) {
+        return {
+            hasDiscount: true,
+            discountedPrice: item.price - percentOff.discountAmount,
+            discountBadge: percentOff.badge,
+            discountAmount: percentOff.discountAmount
+        };
+    }
+
+    return {
+        hasDiscount: false,
+        discountedPrice: item.price,
+        discountBadge: "",
+        discountAmount: 0
+    };
+}
+
+function getCustomizerPromoDisplay(baseItem, normalPrice) {
+    const percentOff = getPercentOffForItem(baseItem, getActivePromotions());
+    if (percentOff) {
+        return {
+            hasDiscount: true,
+            discountedPrice: normalPrice - percentOff.discountAmount,
+            discountBadge: percentOff.badge
+        };
+    }
+
+    return {
+        hasDiscount: false,
+        discountedPrice: normalPrice,
+        discountBadge: ""
+    };
+}
+
+function getCartItemPromoDisplay(cartItem) {
+    const baseId = getCartBaseId(cartItem);
+    const baseItem = getBaseItemById(baseId);
+    if (!baseItem) {
+        return { hasDiscount: false, discountAmount: 0, discountBadge: "" };
+    }
+
+    const percentOff = getPercentOffForItem(baseItem, getActivePromotions());
+    if (percentOff) {
+        return {
+            hasDiscount: true,
+            discountAmount: percentOff.discountAmount,
+            discountBadge: percentOff.badge
+        };
+    }
+
+    return { hasDiscount: false, discountAmount: 0, discountBadge: "" };
+}
+
+function computePercentOffTotal(cartItems, activePromos, excludedBurgerQty = null) {
+    let amount = 0;
+    const reasons = [];
     let coveredSubtotal = 0;
-    const today = new Date().getDay();
+    const percentPromos = activePromos.filter((promo) => promo.type === "percent_off");
 
-    // Viernes (5): 15% descuento en "Crispy Chester" (id: 4)
-    if (today === 5) {
-        cartItems.forEach(item => {
-            const baseId = Number(String(item.key).split("-")[0]);
-            if (baseId === 4) {
-                const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
-                const discountAmount = baseItem ? Math.round(baseItem.price * 0.15) : Math.round(item.unitPrice * 0.15);
-                promoDiscount += discountAmount * item.qty;
-                coveredSubtotal += item.unitPrice * item.qty;
+    cartItems.forEach((item) => {
+        const baseId = getCartBaseId(item);
+        const baseItem = getBaseItemById(baseId);
+        if (!baseItem) return;
+
+        const excluded = excludedBurgerQty?.get(item.key) || 0;
+        const eligibleQty = item.qty - excluded;
+        if (eligibleQty <= 0) return;
+
+        for (const promo of percentPromos) {
+            if (!promo.itemIds.includes(baseId)) continue;
+
+            const discountPerUnit = promo.basePriceOnly
+                ? Math.round(baseItem.price * promo.percent / 100)
+                : Math.round(item.unitPrice * promo.percent / 100);
+
+            amount += discountPerUnit * eligibleQty;
+            coveredSubtotal += item.unitPrice * eligibleQty;
+            if (promo.reason && !reasons.includes(promo.reason)) {
+                reasons.push(promo.reason);
             }
-        });
-        if (promoDiscount > 0) {
-            promoReason = "15% OFF Crispy Chester";
+            break;
         }
+    });
+
+    return { amount, reasons, coveredSubtotal };
+}
+
+function computeBundleTotal(cartItems, activePromos) {
+    const bundlePromos = activePromos.filter((promo) => promo.type === "bundle_fixed_price");
+    if (!bundlePromos.length) {
+        return { amount: 0, reasons: [], pairedBurgerQty: new Map() };
     }
 
-    // Sábado (6): 15% descuento en "Chesty" (id: 7)
-    if (today === 6) {
-        cartItems.forEach(item => {
-            const baseId = Number(String(item.key).split("-")[0]);
-            if (baseId === 7) {
-                const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
-                const discountAmount = baseItem ? Math.round(baseItem.price * 0.15) : Math.round(item.unitPrice * 0.15);
-                promoDiscount += discountAmount * item.qty;
-                coveredSubtotal += item.unitPrice * item.qty;
-            }
-        });
-        if (promoDiscount > 0) {
-            promoReason = "15% OFF Chesty";
-        }
-    }
+    const promo = bundlePromos[0];
+    const drinkIds = new Set(promo.drinkIds);
+    const burgerIdsAny = promo.burgerIds === "any";
+    const burgers = [];
+    const drinks = [];
 
-    // Domingo (0): 15% descuento en "Clásica" (id: 5)
-    if (today === 0) {
-        cartItems.forEach(item => {
-            const baseId = Number(String(item.key).split("-")[0]);
-            if (baseId === 5) {
-                const baseItem = menu.burgers.find(b => b.id === baseId) || menu.burgerOfMonth.find(b => b.id === baseId);
-                const discountAmount = baseItem ? Math.round(baseItem.price * 0.15) : Math.round(item.unitPrice * 0.15);
-                promoDiscount += discountAmount * item.qty;
-                coveredSubtotal += item.unitPrice * item.qty;
+    cartItems.forEach((item) => {
+        const baseId = getCartBaseId(item);
+        const baseItem = getBaseItemById(baseId);
+
+        for (let i = 0; i < item.qty; i++) {
+            if (isBurgerId(baseId) && (burgerIdsAny || promo.burgerIds.includes(baseId))) {
+                burgers.push({
+                    key: item.key,
+                    basePrice: baseItem?.price || 0
+                });
+            } else if (drinkIds.has(baseId)) {
+                drinks.push({
+                    drinkPrice: baseItem?.price || item.unitPrice
+                });
             }
-        });
-        if (promoDiscount > 0) {
-            promoReason = "15% OFF Clásica";
+        }
+    });
+
+    let amount = 0;
+    const pairedBurgerQty = new Map();
+
+    while (burgers.length && drinks.length) {
+        const burger = burgers.shift();
+        const drink = drinks.shift();
+        const discount = burger.basePrice + drink.drinkPrice - promo.bundlePrice;
+        if (discount > 0) {
+            amount += discount;
+            pairedBurgerQty.set(burger.key, (pairedBurgerQty.get(burger.key) || 0) + 1);
         }
     }
 
     return {
-        amount: Math.round(promoDiscount),
-        reason: promoReason,
-        freeItems: freeItems,
-        coveredSubtotal: coveredSubtotal
+        amount,
+        reasons: amount > 0 && promo.reason ? [promo.reason] : [],
+        pairedBurgerQty
     };
 }
 
+function getCartPromoDiscount(cartItems) {
+    const activePromos = getActivePromotions();
+    if (!activePromos.length) {
+        return { amount: 0, reason: "", freeItems: [], coveredSubtotal: 0 };
+    }
+
+    const bundleResult = computeBundleTotal(cartItems, activePromos);
+    const percentWithBundle = computePercentOffTotal(cartItems, activePromos, bundleResult.pairedBurgerQty);
+    const percentOnly = computePercentOffTotal(cartItems, activePromos, null);
+
+    const hybridAmount = bundleResult.amount + percentWithBundle.amount;
+    const percentOnlyAmount = percentOnly.amount;
+    const bundleOnlyAmount = bundleResult.amount;
+
+    let amount;
+    let reason;
+    let coveredSubtotal;
+
+    if (hybridAmount >= percentOnlyAmount && hybridAmount >= bundleOnlyAmount) {
+        amount = hybridAmount;
+        reason = [...bundleResult.reasons, ...percentWithBundle.reasons].filter(Boolean).join(" + ");
+        coveredSubtotal = percentWithBundle.coveredSubtotal;
+    } else if (percentOnlyAmount >= bundleOnlyAmount) {
+        amount = percentOnlyAmount;
+        reason = percentOnly.reasons.join(" + ");
+        coveredSubtotal = percentOnly.coveredSubtotal;
+    } else {
+        amount = bundleOnlyAmount;
+        reason = bundleResult.reasons.join(" + ");
+        coveredSubtotal = 0;
+    }
+
+    return {
+        amount: Math.round(amount),
+        reason,
+        freeItems: [],
+        coveredSubtotal
+    };
+}
+
+function getDailyPromoInfo(cartItems) {
+    return getCartPromoDiscount(cartItems);
+}
 
 function updateDailyPromoBanner() {
     const banner = document.getElementById("daily-promo-banner");
     if (!banner) return;
-    
-    const today = new Date().getDay();
-    const DAY_LABELS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-    let promoText = "";
+    const activePromos = getActivePromotions();
+    const datedPromos = activePromos.filter((promo) => promo.dates && promo.dates.length);
+    const weeklyPromos = activePromos.filter((promo) => promo.days && promo.days.length && (!promo.dates || !promo.dates.length));
+    const bannerPromos = datedPromos.length ? datedPromos : weeklyPromos;
+    const bannerText = bannerPromos.map((promo) => promo.banner).filter(Boolean).join(" · ");
 
-    if (today === 5) {
-        promoText = "🍔 VIERNES: 15% OFF en Crispy Chester";
-    } else if (today === 6) {
-        promoText = "🍔 SÁBADO: 15% OFF en Chesty";
-    } else if (today === 0) {
-        promoText = "🍔 DOMINGO: 15% OFF en Clásica";
-    } else {
-        // Lunes, Martes, Miércoles, Jueves: Sin promo
+    if (!bannerText) {
         banner.hidden = true;
         return;
     }
 
-    banner.textContent = promoText;
+    banner.textContent = bannerText;
     banner.hidden = false;
 }
 
@@ -886,41 +1022,13 @@ function createCartKey(baseId, modifiers) {
 }
 
 function getItemPriceHTML(item) {
-    const today = new Date().getDay();
-    let discountedPrice = item.price;
-    let hasDiscount = false;
-    let discountBadge = "";
+    const promoDisplay = getItemPromoDisplay(item);
 
-    const isBurger = menu.burgers.some(b => b.id === item.id) || menu.burgerOfMonth.some(b => b.id === item.id);
-
-    // Aplicar descuentos basados en el día
-    if (isBurger) {
-        // Viernes (5): 15% OFF en Crispy Chester (id: 4)
-        if (today === 5 && item.id === 4) {
-            discountedPrice = Math.round(item.price * 0.85);
-            hasDiscount = true;
-            discountBadge = "15% OFF";
-        }
-        // Sábado (6): 15% OFF en Chesty (id: 7)
-        else if (today === 6 && item.id === 7) {
-            discountedPrice = Math.round(item.price * 0.85);
-            hasDiscount = true;
-            discountBadge = "15% OFF";
-        }
-        // Domingo (0): 15% OFF en Clásica (id: 5)
-        else if (today === 0 && item.id === 5) {
-            discountedPrice = Math.round(item.price * 0.85);
-            hasDiscount = true;
-            discountBadge = "15% OFF";
-        }
-    }
-
-    let priceContent = hasDiscount
+    const priceContent = promoDisplay.hasDiscount
         ? `<span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(item.price)}</span>
-            <span>${formatMoney(discountedPrice)}</span>
-            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${discountBadge}</span>`
+            <span>${formatMoney(promoDisplay.discountedPrice)}</span>
+            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${promoDisplay.discountBadge}</span>`
         : `<span>${formatMoney(item.price)}</span>`;
-
 
     return `<div class="price-tag">${priceContent}</div>`;
 }

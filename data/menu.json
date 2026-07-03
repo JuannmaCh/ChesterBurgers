@@ -22,9 +22,9 @@
         { "id": 8, "name": "Papas Fritas", "price": 4500, "desc": "Porcion de 120grs", "image": "assets/papas_fritas.avif", "inStock": true }
     ],
     "drinks": [
-        { "id": 10, "name": "Coca Cola", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_coca.webp", "inStock": false },
-        { "id": 11, "name": "Sprite", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_sprite.png", "inStock": false },
-        { "id": 13, "name": "Fanta", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_fanta.png", "inStock": false },
+        { "id": 10, "name": "Coca Cola", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_coca.webp", "inStock": true },
+        { "id": 11, "name": "Sprite", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_sprite.png", "inStock": true },
+        { "id": 13, "name": "Fanta", "price": 3000, "desc": "Lata 354 ml", "image": "assets/lata_fanta.png", "inStock": true },
         { "id": 12, "name": "Agua Mineral", "price": 2000, "desc": "Botella 500 ml", "image": "assets/agua.png", "inStock": false },
         { "id": 15, "name": "Cerveza Heineken", "price": 4400, "desc": "Lata", "image": "assets/lata_heineken.png", "inStock": true },
         { "id": 16, "name": "Cerveza Miller", "price": 3400, "desc": "Lata", "image": "assets/lata_miller.png", "inStock": true }

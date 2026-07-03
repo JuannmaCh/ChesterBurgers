@@ -1,0 +1,45 @@
+{
+    "promotions": [
+        {
+            "id": "world-cup-2026-07-03",
+            "type": "bundle_fixed_price",
+            "dates": ["2026-07-03"],
+            "bundlePrice": 13000,
+            "burgerIds": "any",
+            "drinkIds": [10, 11, 13],
+            "modifiersChargedSeparately": true,
+            "banner": "🇦🇷 MUNDIAL: Burger + Gaseosa $13.000",
+            "reason": "Combo Burger + Gaseosa"
+        },
+        {
+            "id": "friday-crispy",
+            "type": "percent_off",
+            "days": [5],
+            "itemIds": [4],
+            "percent": 15,
+            "basePriceOnly": true,
+            "banner": "🍔 VIERNES: 15% OFF en Crispy Chester",
+            "reason": "15% OFF Crispy Chester"
+        },
+        {
+            "id": "saturday-chesty",
+            "type": "percent_off",
+            "days": [6],
+            "itemIds": [7],
+            "percent": 15,
+            "basePriceOnly": true,
+            "banner": "🍔 SÁBADO: 15% OFF en Chesty",
+            "reason": "15% OFF Chesty"
+        },
+        {
+            "id": "sunday-clasica",
+            "type": "percent_off",
+            "days": [0],
+            "itemIds": [5],
+            "percent": 15,
+            "basePriceOnly": true,
+            "banner": "🍔 DOMINGO: 15% OFF en Clásica",
+            "reason": "15% OFF Clásica"
+        }
+    ]
+}
