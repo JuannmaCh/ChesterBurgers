@@ -88,10 +88,10 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData, promotionsData] = await Promise.all([
-            fetch("data/menu.json?v=1.2.9").then(r => r.json()),
-            fetch("data/config.json?v=1.2.9").then(r => r.json()),
-            fetch("data/shipping.json?v=1.2.9").then(r => r.json()),
-            fetch("data/promotions.json?v=1.2.9").then(r => r.json())
+            fetch("data/menu.json?v=1.3.0").then(r => r.json()),
+            fetch("data/config.json?v=1.3.0").then(r => r.json()),
+            fetch("data/shipping.json?v=1.3.0").then(r => r.json()),
+            fetch("data/promotions.json?v=1.3.0").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -137,6 +137,8 @@ function bindEvents() {
     document.getElementById("customizer-panceta").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-huevo").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-pepino").addEventListener("change", updateCustomizerPrice);
+    document.getElementById("customizer-combo-enable")?.addEventListener("change", onCustomizerComboChange);
+    document.getElementById("customizer-combo-drink-options")?.addEventListener("change", updateCustomizerPrice);
     window.addEventListener("popstate", onWindowPopstate);
 
     customerNameInput.addEventListener("input", () => {
@@ -384,6 +386,7 @@ function addBurger(id) {
     });
 
     refreshCustomizerOptionLabels();
+    setupCustomizerComboSection();
 
     burgerCustomizerInfo.innerHTML = `
         <div style="margin-bottom: 16px;">
@@ -401,6 +404,24 @@ function updateCustomizerPrice() {
 
     const selectedModifiers = getSelectedBurgerModifiers();
     const normalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, selectedModifiers);
+
+    if (isComboCustomizerSelected()) {
+        const comboPromo = getActiveBundleCustomizerPromo();
+        if (comboPromo) {
+            const modifierCosts = normalPrice - currentBurgerToCustomize.price;
+            const comboPrice = comboPromo.bundlePrice + modifierCosts;
+            const drinkId = getSelectedComboDrinkId();
+            const drink = drinkId ? menu.drinks.find((d) => d.id === drinkId) : null;
+            const drinkLabel = drink ? ` + ${drink.name}` : "";
+            const extrasNote = modifierCosts > 0
+                ? `<span style="display: block; font-size: 0.85rem; font-weight: 600; color: #666; margin-top: 4px;">Incluye personalización (+${formatMoney(modifierCosts)})</span>`
+                : "";
+
+            burgerCustomizerPrice.innerHTML = `Combo${drinkLabel}: <span>${formatMoney(comboPrice)}</span>${extrasNote}`;
+            return;
+        }
+    }
+
     const promoDisplay = getCustomizerPromoDisplay(currentBurgerToCustomize, normalPrice);
 
     if (promoDisplay.hasDiscount) {
@@ -416,20 +437,53 @@ function confirmBurgerCustomizer() {
     if (!currentBurgerToCustomize) return;
 
     const modifiers = getSelectedBurgerModifiers();
-    const finalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, modifiers);
-    const displayName = buildCustomizedBurgerName(currentBurgerToCustomize.name, modifiers);
-
     const modifierNames = modifiers.map(key => BURGER_MODIFIER_META[key]?.displayLabel || key).join(', ');
     gtag('event', 'customize_burger', {
         modifiers: modifierNames
     });
 
-    addToCart({
-        key: createCartKey(currentBurgerToCustomize.id, modifiers),
-        name: displayName,
-        unitPrice: finalPrice,
-        image: currentBurgerToCustomize.image
-    });
+    if (isComboCustomizerSelected()) {
+        const comboPromo = getActiveBundleCustomizerPromo();
+        const drinkId = getSelectedComboDrinkId();
+        if (!comboPromo) {
+            showFeedback("La promo de combo no está disponible");
+            return;
+        }
+        if (!drinkId) {
+            showFeedback("Elegí una gaseosa para el combo");
+            return;
+        }
+
+        const drink = menu.drinks.find((d) => d.id === drinkId);
+        if (!drink) {
+            showFeedback("Gaseosa no disponible");
+            return;
+        }
+
+        const normalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, modifiers);
+        const modifierCosts = normalPrice - currentBurgerToCustomize.price;
+        const comboPrice = comboPromo.bundlePrice + modifierCosts;
+        const burgerName = buildCustomizedBurgerName(currentBurgerToCustomize.name, modifiers);
+        const displayName = `${burgerName} + ${drink.name} — ${comboPromo.reason}`;
+
+        addToCart({
+            key: createComboCartKey(currentBurgerToCustomize.id, modifiers, drinkId),
+            name: displayName,
+            unitPrice: comboPrice,
+            image: currentBurgerToCustomize.image,
+            combo: { promoId: comboPromo.id, drinkId }
+        });
+    } else {
+        const finalPrice = calculateCustomizedBurgerPrice(currentBurgerToCustomize.price, modifiers);
+        const displayName = buildCustomizedBurgerName(currentBurgerToCustomize.name, modifiers);
+
+        addToCart({
+            key: createCartKey(currentBurgerToCustomize.id, modifiers),
+            name: displayName,
+            unitPrice: finalPrice,
+            image: currentBurgerToCustomize.image
+        });
+    }
 
     provideAddButtonFeedback(confirmBurgerCustomizerBtn, {
         temporaryText: "AGREGADA ✅",
@@ -473,6 +527,7 @@ function closeBurgerCustomizer(options = {}) {
         burgerCustomizerModal.setAttribute("hidden", "");
         syncBodyScrollLock();
     }, 300);
+    resetCustomizerComboSection();
     currentBurgerToCustomize = null;
 }
 
@@ -539,7 +594,7 @@ function resetButtonFeedbackState(button) {
     button.disabled = false;
 }
 
-function addToCart({ key, name, unitPrice, image = "" }) {
+function addToCart({ key, name, unitPrice, image = "", combo = null }) {
     gtag('event', 'add_to_cart', {
         currency: 'ARS',
         value: unitPrice,
@@ -560,7 +615,11 @@ function addToCart({ key, name, unitPrice, image = "" }) {
             existingItem.image = safeImage;
         }
     } else {
-        cart.push({ key, name, unitPrice, qty: 1, image: safeImage });
+        const cartItem = { key, name, unitPrice, qty: 1, image: safeImage };
+        if (combo) {
+            cartItem.combo = combo;
+        }
+        cart.push(cartItem);
     }
 
     persistAndRefresh(`${name} agregado al carrito`);
@@ -732,6 +791,74 @@ function getActivePromotions() {
     });
 }
 
+function getActiveBundleCustomizerPromo() {
+    return getActivePromotions().find((promo) => (
+        promo.type === "bundle_fixed_price" && promo.customizerOffer
+    ));
+}
+
+function resetCustomizerComboSection() {
+    const section = document.getElementById("customizer-combo-section");
+    const enable = document.getElementById("customizer-combo-enable");
+    const drinks = document.getElementById("customizer-combo-drinks");
+    const options = document.getElementById("customizer-combo-drink-options");
+
+    if (section) section.hidden = true;
+    if (enable) enable.checked = false;
+    if (drinks) drinks.hidden = true;
+    if (options) options.innerHTML = "";
+}
+
+function setupCustomizerComboSection() {
+    const promo = getActiveBundleCustomizerPromo();
+    const section = document.getElementById("customizer-combo-section");
+
+    if (!section || !promo) {
+        resetCustomizerComboSection();
+        return;
+    }
+
+    resetCustomizerComboSection();
+    section.hidden = false;
+
+    const label = document.getElementById("customizer-combo-label");
+    if (label) {
+        label.textContent = promo.customizerLabel || `Combo — ${formatMoney(promo.bundlePrice)}`;
+    }
+
+    const optionsContainer = document.getElementById("customizer-combo-drink-options");
+    if (!optionsContainer) return;
+
+    optionsContainer.innerHTML = promo.drinkIds.map((drinkId) => {
+        const drink = menu.drinks.find((d) => d.id === drinkId);
+        if (!drink) return "";
+
+        return `
+            <label class="customizer-combo-drink-option">
+                <input type="radio" name="customizer-combo-drink" value="${drinkId}">
+                <span>${drink.name}</span>
+            </label>
+        `;
+    }).join("");
+}
+
+function isComboCustomizerSelected() {
+    return document.getElementById("customizer-combo-enable")?.checked ?? false;
+}
+
+function getSelectedComboDrinkId() {
+    const selected = document.querySelector('input[name="customizer-combo-drink"]:checked');
+    return selected ? Number(selected.value) : null;
+}
+
+function onCustomizerComboChange() {
+    const drinks = document.getElementById("customizer-combo-drinks");
+    if (drinks) {
+        drinks.hidden = !isComboCustomizerSelected();
+    }
+    updateCustomizerPrice();
+}
+
 function getBaseItemById(id) {
     return menu.burgers.find((b) => b.id === id)
         || menu.burgerOfMonth.find((b) => b.id === id)
@@ -809,6 +936,10 @@ function getCustomizerPromoDisplay(baseItem, normalPrice) {
 }
 
 function getCartItemPromoDisplay(cartItem) {
+    if (cartItem.combo) {
+        return { hasDiscount: false, discountAmount: 0, discountBadge: "" };
+    }
+
     const baseId = getCartBaseId(cartItem);
     const baseItem = getBaseItemById(baseId);
     if (!baseItem) {
@@ -834,6 +965,8 @@ function computePercentOffTotal(cartItems, activePromos, excludedBurgerQty = nul
     const percentPromos = activePromos.filter((promo) => promo.type === "percent_off");
 
     cartItems.forEach((item) => {
+        if (item.combo) return;
+
         const baseId = getCartBaseId(item);
         const baseItem = getBaseItemById(baseId);
         if (!baseItem) return;
@@ -874,6 +1007,8 @@ function computeBundleTotal(cartItems, activePromos) {
     const drinks = [];
 
     cartItems.forEach((item) => {
+        if (item.combo) return;
+
         const baseId = getCartBaseId(item);
         const baseItem = getBaseItemById(baseId);
 
@@ -1019,6 +1154,10 @@ function getCartItemCount() {
 function createCartKey(baseId, modifiers) {
     const normalizedModifiers = [...modifiers].filter(Boolean).sort();
     return `${baseId}-${normalizedModifiers.join("-") || "base"}`;
+}
+
+function createComboCartKey(baseId, modifiers, drinkId) {
+    return `${createCartKey(baseId, modifiers)}-combo-${drinkId}`;
 }
 
 function getItemPriceHTML(item) {

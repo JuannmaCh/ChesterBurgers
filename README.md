@@ -82,10 +82,14 @@ Todas las promociones se definen en `data/promotions.json`. No hace falta tocar 
   "burgerIds": "any",
   "drinkIds": [10, 11, 13],
   "modifiersChargedSeparately": true,
+  "customizerOffer": true,
+  "customizerLabel": "Combo Burger + Gaseosa — $13.000",
   "banner": "🇦🇷 MUNDIAL: Burger + Gaseosa $13.000",
   "reason": "Combo Burger + Gaseosa"
 }
 ```
+
+Con `"customizerOffer": true`, el pop-up de personalización de burgers muestra un checkbox para armar el combo en un solo paso. El carrito guarda una sola línea (ej. `Cheese + Coca Cola — Combo Burger + Gaseosa`) al precio final del combo.
 
 ### Cómo agregar o quitar promos
 

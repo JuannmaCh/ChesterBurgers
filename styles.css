@@ -540,6 +540,59 @@ h2 {
     margin-top: 0;
 }
 
+.customizer-combo-section {
+    margin: 16px 0;
+    padding: 12px;
+    background: #fff8e6;
+    border: 1px solid #f0d78c;
+    border-radius: 6px;
+}
+
+.customizer-section-title {
+    margin: 0 0 12px 0;
+    font-weight: 700;
+    color: var(--red);
+    font-size: 0.9rem;
+}
+
+.customizer-combo-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.customizer-combo-drinks {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0d78c;
+}
+
+.customizer-combo-drinks-label {
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.85rem;
+}
+
+.customizer-combo-drink-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.customizer-combo-drink-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+}
+
 .btn-close {
     min-height: 44px;
     min-width: 44px;

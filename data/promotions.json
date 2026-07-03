@@ -8,6 +8,8 @@
             "burgerIds": "any",
             "drinkIds": [10, 11, 13],
             "modifiersChargedSeparately": true,
+            "customizerOffer": true,
+            "customizerLabel": "Combo Burger + Gaseosa — $13.000",
             "banner": "🇦🇷 MUNDIAL: Burger + Gaseosa $13.000",
             "reason": "Combo Burger + Gaseosa"
         },
