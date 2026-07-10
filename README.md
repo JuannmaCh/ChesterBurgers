@@ -26,6 +26,10 @@ Aplicación web para tomar pedidos de la hamburguesería **Chester Burger**, dis
 │   └── config.json         # Configuración general (WhatsApp, descuentos, modificadores)
 ├── pages/
 │   └── creacion_ticket.html  # Panel de cocina para imprimir tickets
+├── scripts/
+│   └── sync-seo.js           # Regenera SEO (noscript + JSON-LD) desde menu.json
+├── robots.txt                # Directivas para buscadores
+├── sitemap.xml               # Mapa del sitio
 └── assets/                 # Imágenes del menú y logo
 ```
 
@@ -101,6 +105,14 @@ Con `"customizerOffer": true`, el pop-up de personalización de burgers muestra 
 | Habilitar bebidas para combo | `"inStock": true` en `menu.json` para las gaseosas |
 
 Después de editar, subir el cambio y **bump de cache** en las URLs de `app.js` (ej. `?v=1.2.9` → `?v=1.3.0`) para que los clientes vean la promo actualizada.
+
+Si editás `menu.json`, corré también el script de SEO antes de publicar:
+
+```bash
+node scripts/sync-seo.js
+```
+
+Eso regenera el menú indexable (`<noscript>`) y los datos estructurados JSON-LD en `index.html` desde `menu.json` y `config.json`.
 
 Las promos usan la zona horaria `America/Argentina/Buenos_Aires`. Si hay más de una promo aplicable al carrito, se aplica la que más ahorro genere.
 

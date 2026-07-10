@@ -88,10 +88,10 @@ let currentBurgerToCustomize = null;
 async function init() {
     try {
         const [menuData, configData, shippingData, promotionsData] = await Promise.all([
-            fetch("data/menu.json?v=1.3.2").then(r => r.json()),
-            fetch("data/config.json?v=1.3.2").then(r => r.json()),
-            fetch("data/shipping.json?v=1.3.2").then(r => r.json()),
-            fetch("data/promotions.json?v=1.3.2").then(r => r.json())
+            fetch("data/menu.json?v=1.3.3").then(r => r.json()),
+            fetch("data/config.json?v=1.3.3").then(r => r.json()),
+            fetch("data/shipping.json?v=1.3.3").then(r => r.json()),
+            fetch("data/promotions.json?v=1.3.3").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -247,12 +247,18 @@ function render() {
     renderCart();
 }
 
+function buildItemImageHTML(item) {
+    const src = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
+    const alt = `${item.name} - Chester Burger`;
+    return `<div class="item-img"><img src="${src}" alt="${alt}" loading="lazy" decoding="async"></div>`;
+}
+
 function renderBurgerOfMonth() {
     if (!burgerMonthList) return;
 
     burgerMonthList.innerHTML = menu.burgerOfMonth.map((item) => `
         <article class="item-card" data-item-id="${item.id}" data-item-name="${item.name}" style="border: 2px solid var(--yellow); padding: 15px; border-radius: 8px; background: rgba(255, 209, 59, 0.05);">
-            <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
+            ${buildItemImageHTML(item)}
             <div class="item-details">
                 <span style="background: var(--yellow); color: var(--red); padding: 2px 8px; font-weight: 800; font-size: 0.75rem; border-radius: 4px; text-transform: uppercase;">Estrella del Mes</span>
                 <h3>${item.name}</h3>
@@ -290,7 +296,7 @@ function renderBurgers() {
 
         return `
         <article class="${cardClass}" data-item-id="${item.id}" data-item-name="${item.name}">
-            <div class="item-img" style="background-image: url('${resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE)}')" aria-hidden="true"></div>
+            ${buildItemImageHTML(item)}
             <div class="item-details">
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
@@ -306,14 +312,13 @@ function renderBurgers() {
 
 function renderSimple(list, container, label, type) {
     container.innerHTML = list.map((item) => {
-        const imgStyle = item.image ? ` style="background-image: url('${resolveAssetPath(item.image)}')"` : "";
         const isOutOfStock = item.inStock === false;
         const cardClass = isOutOfStock ? "item-card is-out-of-stock" : "item-card";
         const stockBadge = isOutOfStock ? '<span class="stock-badge" aria-label="Sin stock">SIN STOCK</span>' : "";
         const buttonLabel = isOutOfStock ? "SIN STOCK" : "ANADIR";
         return `
         <article class="${cardClass}" data-item-id="${item.id}" data-item-name="${item.name}">
-            <div class="item-img"${imgStyle} aria-hidden="true"></div>
+            ${buildItemImageHTML(item)}
             <div class="item-details">
                 <h3>${item.name}</h3>
                 ${item.desc ? `<p>${item.desc}</p>` : ""}

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /pages/creacion_ticket.html
+
+Sitemap: https://chesterburger.com.ar/sitemap.xml
