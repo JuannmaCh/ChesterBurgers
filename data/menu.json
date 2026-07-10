@@ -2,10 +2,10 @@
     "burgerOfMonth": [
         {
             "id": 14,
-            "name": "Oklahoma Burger",
+            "name": "La Vek",
             "price": 14000,
-            "desc": "Doble medallon 100grs smasheado con cebolla a la plancha y doble cheddar con pan de kalis",
-            "image": "assets/burger_chester.jpeg",
+            "desc": "Doble medallon 100grs, cheddar, cebolla caramelizada, panceta, alioli y barbacoa con pan de kalis",
+            "image": "assets/burger_vek.jpeg",
             "inStock": true
         }
     ],
