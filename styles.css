@@ -862,50 +862,70 @@ h2 {
 }
 
 .site-footer {
-    background: var(--surface);
+    background: #fcfcfc;
     border-top: 4px solid var(--red);
-    padding: 32px 16px 24px;
-    color: var(--dark);
+    padding: 60px 20px 40px;
+    font-family: "Montserrat", sans-serif;
+    color: #333;
 }
 
 .site-footer-title {
-    margin: 0 0 12px;
+    margin: 0 auto 20px;
+    padding: 14px 24px;
+    max-width: fit-content;
+    background: var(--red);
+    color: #ffffff;
     font-family: "Playfair Display", serif;
-    color: var(--red);
     font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(163, 29, 36, 0.22);
 }
 
 .site-footer-intro {
-    margin: 0 0 24px;
+    margin: 0 auto 36px;
     color: #333;
     line-height: 1.6;
     max-width: 720px;
+    text-align: center;
 }
 
 .site-footer-grid {
     display: grid;
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
 }
 
 .site-footer h3 {
-    margin: 0 0 8px;
-    font-size: 0.95rem;
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     color: var(--red);
+    display: inline-block;
+    padding-bottom: 6px;
+    border-bottom: 3px solid var(--yellow);
 }
 
 .site-footer p,
 .site-footer li {
     margin: 0;
-    color: #444;
-    line-height: 1.5;
+    color: #333;
+    line-height: 1.6;
     font-size: 0.92rem;
 }
 
 .site-footer a {
-    color: var(--red-dark);
+    color: var(--red);
     font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.site-footer a:hover {
+    opacity: 0.75;
 }
 
 .site-footer-hours {
@@ -913,7 +933,7 @@ h2 {
     padding: 0;
     margin: 0;
     display: grid;
-    gap: 4px;
+    gap: 6px;
 }
 
 .seo-fallback {
@@ -932,17 +952,5 @@ h2 {
 
 .seo-fallback ul {
     padding-left: 20px;
-}
-
-@media (min-width: 768px) {
-    .site-footer-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1024px) {
-    .site-footer-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
 }
 
