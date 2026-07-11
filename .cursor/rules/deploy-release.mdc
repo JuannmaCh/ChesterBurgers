@@ -1,0 +1,41 @@
+---
+description: Checklist de publicación y cache busting
+alwaysApply: true
+---
+
+# Publicación y cache
+
+Los clientes cachean assets por query string `?v=`. Tras cambios que afecten lo que ven los usuarios, **incrementar la versión en todos estos lugares**:
+
+| Archivo | Qué actualizar |
+|---------|----------------|
+| `app.js` | 4 `fetch` a `data/*.json?v=X` |
+| `index.html` | `styles.css?v=X` y `app.js?v=X` |
+| `styles.css` | (solo si cambió; el bump va en `index.html`) |
+
+Versión actual de referencia: `1.3.4`. Subir patch: `1.3.4` → `1.3.5`.
+
+## Checklist según el cambio
+
+| Cambio | Acciones |
+|--------|----------|
+| Solo `promotions.json` / `shipping.json` / `config.json` | Bump `?v=` en `app.js` |
+| `menu.json` | Bump `?v=` + `node scripts/sync-seo.js` |
+| `styles.css` | Bump `?v=` en `index.html` |
+| `app.js` | Bump `?v=` en `index.html` |
+
+## SEO
+
+`scripts/sync-seo.js` regenera en `index.html`:
+- Bloque `<noscript>` con menú indexable
+- JSON-LD (`Restaurant`, `MenuItem`, horarios)
+
+Marcadores: `<!-- SEO:MENU_SCHEMA_START -->` … `<!-- SEO:MENU_SCHEMA_END -->`
+
+## Servidor local
+
+```bash
+npx serve .
+```
+
+No abrir `index.html` directo en el navegador (falla el `fetch` de JSON).

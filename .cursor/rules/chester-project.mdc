@@ -1,0 +1,41 @@
+---
+description: Contexto general del proyecto Chester Burger
+alwaysApply: true
+---
+
+# Chester Burger — Proyecto
+
+App web de pedidos online para hamburguesería. El cliente arma el carrito desde el celular y envía el pedido por WhatsApp.
+
+## Stack
+
+- HTML, CSS y JavaScript vanilla — **sin frameworks ni dependencias nuevas**
+- Datos en `/data/*.json` cargados con `fetch` (requiere servidor HTTP)
+- Sitio en producción: [chesterburger.com.ar](https://chesterburger.com.ar)
+
+## Estructura clave
+
+| Archivo | Rol |
+|---------|-----|
+| `index.html` | App principal + SEO (JSON-LD, noscript) |
+| `app.js` | Lógica de menú, carrito, promos, checkout y WhatsApp |
+| `styles.css` | Estilos |
+| `data/menu.json` | Burgers, extras, bebidas |
+| `data/promotions.json` | Promociones |
+| `data/shipping.json` | Zonas de envío |
+| `data/config.json` | WhatsApp, take away, precios de modificadores |
+| `pages/creacion_ticket.html` | Panel de cocina (tickets imprimibles) |
+| `scripts/sync-seo.js` | Regenera SEO en `index.html` desde los JSON |
+
+## Convenciones de negocio
+
+- Locale: `es-AR`, moneda `ARS`, sin decimales
+- Zona horaria: `America/Argentina/Buenos_Aires`
+- Carrito en `localStorage` (`chester-cart-v1`)
+- Modificadores de burger: NotCo, Triple, +Cheddar, +Panceta, +Huevo, +Pepino
+
+## Principios al editar
+
+- Cambios de menú, precios, promos y envío → preferir `/data`, no código
+- No refactorizar `app.js` ni agregar dependencias salvo pedido explícito
+- Respetar el estilo existente: funciones nombradas, DOM por `getElementById`, sin módulos ES

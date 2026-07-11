@@ -1,0 +1,30 @@
+---
+description: Convenciones para archivos de datos en /data
+globs: data/**/*.json
+alwaysApply: false
+---
+
+# Datos en /data
+
+La info editable del negocio vive en JSON. No duplicar precios ni ítems en `app.js` o `index.html`.
+
+## Archivos
+
+- `menu.json` — `burgerOfMonth`, `burgers`, `extras`, `drinks`. Cada ítem: `id`, `name`, `price`, `desc`, `image`, `inStock`
+- `config.json` — `whatsappPhone`, `pickupAddress`, `modifierPrices`, `openingHours`
+- `shipping.json` — zonas con precio de envío
+- `promotions.json` — ver regla de promociones
+
+## Reglas
+
+- `inStock: false` deshabilita un ítem sin borrarlo
+- Los `id` de ítems son estables; no reutilizar IDs eliminados
+- Precios en enteros (pesos argentinos)
+- Tras editar `menu.json`: correr `node scripts/sync-seo.js` antes de publicar
+- Tras cualquier cambio en `/data`: bump de cache `?v=` (ver regla de deploy)
+
+## Ejemplo — deshabilitar bebida
+
+```json
+{ "id": 12, "name": "Agua Mineral", "price": 2000, "inStock": false }
+```

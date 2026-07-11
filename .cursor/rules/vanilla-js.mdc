@@ -1,0 +1,39 @@
+---
+description: Convenciones de código JavaScript y HTML
+globs: app.js,scripts/**/*.js,pages/**/*.html,index.html
+alwaysApply: false
+---
+
+# Código JavaScript y HTML
+
+## Estilo
+
+- Vanilla JS: funciones nombradas, sin TypeScript, sin bundler
+- Constantes en UPPER_SNAKE al inicio de `app.js`
+- DOM: `document.getElementById`, eventos en `bindEvents()`
+- Formato de dinero: `Intl.NumberFormat("es-AR", { currency: "ARS" })`
+- Fechas de promo: `getArgentinaDate()` con TZ Argentina
+
+## Alcance de cambios
+
+- `app.js` es monolítico (~1600 líneas). Editar solo la sección relevante
+- No extraer módulos ni reestructurar sin pedido explícito
+- No agregar npm packages ni frameworks
+
+## Áreas de `app.js`
+
+| Dominio | Funciones clave |
+|---------|-----------------|
+| Carrito | `addToCart`, `changeQty`, `persistAndRefresh` |
+| Customizer | `openBurgerCustomizer`, `confirmBurgerCustomizer` |
+| Promos | `getActivePromotions`, `getPercentOffForItem`, lógica de bundle |
+| Checkout | `updateTotals`, envío a WhatsApp |
+| Render | `render`, `renderBurgers`, `renderCart` |
+
+## Panel de cocina
+
+`pages/creacion_ticket.html` usa html2canvas para imprimir tickets desde texto de WhatsApp. Cambios de formato de pedido en `app.js` pueden afectar el parser del ticket.
+
+## Accesibilidad
+
+Respetar `liveRegion` (`#a11y-live`) y modales con focus trap existente al tocar flujos de UI.

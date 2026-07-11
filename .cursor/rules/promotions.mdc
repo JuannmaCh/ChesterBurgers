@@ -1,0 +1,60 @@
+---
+description: Cómo agregar y editar promociones
+globs: data/promotions.json
+alwaysApply: false
+---
+
+# Promociones
+
+Todas las promos van en `data/promotions.json`. **No tocar `app.js`** para agregar o quitar promos.
+
+## Tipos soportados
+
+### `percent_off` — descuento porcentual
+
+```json
+{
+  "id": "friday-crispy",
+  "type": "percent_off",
+  "days": [5],
+  "itemIds": [4],
+  "percent": 15,
+  "basePriceOnly": true,
+  "banner": "🍔 VIERNES: 15% OFF en Crispy Chester",
+  "reason": "15% OFF Crispy Chester"
+}
+```
+
+- `days`: 0=domingo … 6=sábado
+- `basePriceOnly: true` — el % solo aplica al precio base, no a modificadores
+
+### `bundle_fixed_price` — combo precio fijo
+
+```json
+{
+  "id": "combo-burger-gaseosa",
+  "type": "bundle_fixed_price",
+  "dates": ["2026-07-03"],
+  "bundlePrice": 13000,
+  "burgerIds": "any",
+  "drinkIds": [10, 11, 13],
+  "modifiersChargedSeparately": true,
+  "customizerOffer": true,
+  "customizerLabel": "Combo Burger + Gaseosa — $13.000",
+  "banner": "🇦🇷 Combo Burger + Gaseosa $13.000",
+  "reason": "Combo Burger + Gaseosa"
+}
+```
+
+- `customizerOffer: true` — checkbox en el personalizador de burgers
+- Bebidas del combo deben tener `inStock: true` en `menu.json`
+
+## Calendario
+
+| Caso | Campo |
+|------|-------|
+| Semanal | `"days": [0-6]` |
+| Un solo día | `"dates": ["YYYY-MM-DD"]` |
+| Desactivar | `"active": false` |
+
+Si varias promos aplican, gana la que más ahorro genere. Usar TZ `America/Argentina/Buenos_Aires`.
