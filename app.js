@@ -190,6 +190,10 @@ function onWindowPopstate() {
 
 function onDocumentKeydown(event) {
     if (event.key === "Escape") {
+        if (!document.getElementById("img-lightbox").hidden) {
+            closeLightbox();
+            return;
+        }
         if (!burgerCustomizerModal.hidden) {
             closeBurgerCustomizer();
         }
@@ -205,7 +209,32 @@ function onCheckoutBackdropClick(event) {
     }
 }
 
+function openLightbox(src) {
+    const lb = document.getElementById("img-lightbox");
+    lb.querySelector("img").src = src;
+    lb.hidden = false;
+    document.body.style.overflow = "hidden";
+}
+
+function closeLightbox() {
+    const lb = document.getElementById("img-lightbox");
+    lb.hidden = true;
+    lb.querySelector("img").src = "";
+    document.body.style.overflow = "";
+}
+
 function onDocumentClick(event) {
+    const lightboxTrigger = event.target.closest(".item-img[data-lightbox-src]");
+    if (lightboxTrigger) {
+        openLightbox(lightboxTrigger.dataset.lightboxSrc);
+        return;
+    }
+
+    if (event.target.id === "img-lightbox") {
+        closeLightbox();
+        return;
+    }
+
     const button = event.target.closest("button[data-action]");
     if (!button) return;
 
@@ -250,7 +279,7 @@ function render() {
 function buildItemImageHTML(item) {
     const src = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
     const alt = `${item.name} - Chester Burger`;
-    return `<div class="item-img"><img src="${src}" alt="${alt}" loading="lazy" decoding="async"></div>`;
+    return `<div class="item-img" data-lightbox-src="${src}" role="button" aria-label="Ver ${item.name}"><img src="${src}" alt="${alt}" loading="lazy" decoding="async"></div>`;
 }
 
 function renderBurgerOfMonth() {
