@@ -84,14 +84,17 @@ const burgerCustomizerInfo = document.getElementById("customizer-burger-info");
 const burgerCustomizerPrice = document.getElementById("customizer-price");
 
 let currentBurgerToCustomize = null;
+let removeBurgerCustomizerTrap = null;
+let removeCheckoutTrap = null;
+let lightboxTriggerElement = null;
 
 async function init() {
     try {
         const [menuData, configData, shippingData, promotionsData] = await Promise.all([
-            fetch("data/menu.json?v=1.3.6").then(r => r.json()),
-            fetch("data/config.json?v=1.3.5").then(r => r.json()),
-            fetch("data/shipping.json?v=1.3.5").then(r => r.json()),
-            fetch("data/promotions.json?v=1.3.5").then(r => r.json())
+            fetch("data/menu.json?v=1.4.0").then(r => r.json()),
+            fetch("data/config.json?v=1.4.0").then(r => r.json()),
+            fetch("data/shipping.json?v=1.4.0").then(r => r.json()),
+            fetch("data/promotions.json?v=1.4.0").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -131,6 +134,7 @@ function bindEvents() {
     closeBurgerCustomizerBtn.addEventListener("click", closeBurgerCustomizer);
     confirmBurgerCustomizerBtn.addEventListener("click", confirmBurgerCustomizer);
     burgerCustomizerModal.addEventListener("click", onBurgerCustomizerBackdropClick);
+    document.getElementById("lightbox-close-btn").addEventListener("click", closeLightbox);
     document.getElementById("customizer-notco").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-triple").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-cheddar").addEventListener("change", updateCustomizerPrice);
@@ -182,6 +186,24 @@ function syncBodyScrollLock() {
     document.body.classList.toggle("no-scroll", shouldLock);
 }
 
+function trapFocus(modal) {
+    const FOCUSABLE = 'a[href], button:not(:disabled), textarea, input:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex="-1"])';
+    function handler(e) {
+        if (e.key !== "Tab") return;
+        const focusable = [...modal.querySelectorAll(FOCUSABLE)].filter(el => !el.closest("[hidden]"));
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+            if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+    }
+    modal.addEventListener("keydown", handler);
+    return () => modal.removeEventListener("keydown", handler);
+}
+
 function onWindowPopstate() {
     if (!burgerCustomizerModal.hidden && window.location.hash !== BURGER_CUSTOMIZER_HASH) {
         closeBurgerCustomizer({ fromHistory: true });
@@ -215,6 +237,7 @@ function openLightbox(src) {
     lb.querySelector("img").src = src;
     lb.hidden = false;
     document.body.style.overflow = "hidden";
+    document.getElementById("lightbox-close-btn").focus();
 }
 
 function closeLightbox() {
@@ -225,18 +248,27 @@ function closeLightbox() {
         lb.classList.remove("is-closing");
         lb.querySelector("img").src = "";
         document.body.style.overflow = "";
+        if (lightboxTriggerElement) { lightboxTriggerElement.focus(); lightboxTriggerElement = null; }
     }, { once: true });
 }
 
 function onDocumentClick(event) {
     const lightboxTrigger = event.target.closest(".item-img[data-lightbox-src]");
     if (lightboxTrigger) {
+        lightboxTriggerElement = lightboxTrigger;
         openLightbox(lightboxTrigger.dataset.lightboxSrc);
         return;
     }
 
     if (event.target.id === "img-lightbox") {
         closeLightbox();
+        return;
+    }
+
+    const scrollTarget = event.target.closest("[data-scroll-to]");
+    if (scrollTarget) {
+        const card = document.querySelector(`[data-item-id="${scrollTarget.dataset.scrollTo}"]`);
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
     }
 
@@ -284,23 +316,27 @@ function render() {
 function buildItemImageHTML(item) {
     const src = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
     const alt = `${item.name} - Chester Burger`;
-    return `<div class="item-img" data-lightbox-src="${src}" role="button" aria-label="Ver ${item.name}"><img src="${src}" alt="${alt}" loading="lazy" decoding="async"></div>`;
+    const isJpeg = /\.(jpe?g)$/i.test(src);
+    const inner = isJpeg
+        ? `<picture><source type="image/webp" srcset="${src.replace(/\.(jpe?g)$/i, '.webp')}"><img src="${src}" alt="${alt}" loading="lazy" decoding="async"></picture>`
+        : `<img src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+    return `<div class="item-img" data-lightbox-src="${src}" role="button" aria-label="Ver ${item.name}">${inner}</div>`;
 }
 
 function renderBurgerOfMonth() {
     if (!burgerMonthList) return;
 
     burgerMonthList.innerHTML = menu.burgerOfMonth.map((item) => `
-        <article class="item-card" data-item-id="${item.id}" data-item-name="${item.name}" style="border: 2px solid var(--yellow); padding: 15px; border-radius: 8px; background: rgba(255, 209, 59, 0.05);">
+        <article class="item-card burger-of-month-card" data-item-id="${item.id}" data-item-name="${item.name}">
             ${buildItemImageHTML(item)}
             <div class="item-details">
-                <span style="background: var(--yellow); color: var(--red); padding: 2px 8px; font-weight: 800; font-size: 0.75rem; border-radius: 4px; text-transform: uppercase;">Estrella del Mes</span>
+                <span class="badge-star">Estrella del Mes</span>
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
                 ${getItemPriceHTML(item)}
             </div>
             <div class="cart-qty-badge-slot">${buildCartBadgeHTML(item.id, item.name)}</div>
-            <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}">ANADIR</button>
+            <button class="btn-add" type="button" data-action="add-burger" data-id="${item.id}" aria-label="Personalizar y agregar ${item.name}">AÑADIR</button>
         </article>
     `).join("");
 }
@@ -309,16 +345,10 @@ function renderBurgers() {
     const triplePrice = formatMoney(CONFIG_PRICES.modifiers.triple);
     const extraModifierPrice = formatMoney(CONFIG_PRICES.modifiers.cheddar);
     const burgersHeader = `
-        <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid var(--red);">
-            <p style="margin: 0; font-size: 0.9rem; font-weight: 600; color: #333;">
-                ✅ <strong>Todas las burgers vienen con papas fritas sazonadas incluidas</strong>
-            </p>
-            <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #666;">
-                💡 Opciones disponibles en todas:
-            </p>
-            <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #666; margin-left: 16px;">
-                🌱 <strong>NotCo</strong> (veggie) • <strong>Triple</strong> (+${triplePrice}) • <strong>+ Cheddar, Panceta o Huevo</strong> (+${extraModifierPrice} c/u)
-            </p>
+        <div class="burger-info-box">
+            <p>✅ <strong>Todas las burgers vienen con papas fritas sazonadas incluidas</strong></p>
+            <p>💡 Opciones disponibles en todas:</p>
+            <p>🌱 <strong>NotCo</strong> (veggie) • <strong>Triple</strong> (+${triplePrice}) • <strong>+ Cheddar, Panceta o Huevo</strong> (+${extraModifierPrice} c/u)</p>
         </div>
     `;
 
@@ -326,7 +356,7 @@ function renderBurgers() {
         const isOutOfStock = item.inStock === false;
         const cardClass = isOutOfStock ? "item-card is-out-of-stock" : "item-card";
         const stockBadge = isOutOfStock ? '<span class="stock-badge" aria-label="Sin stock">SIN STOCK</span>' : "";
-        const buttonLabel = isOutOfStock ? "SIN STOCK" : "ANADIR";
+        const buttonLabel = isOutOfStock ? "SIN STOCK" : "AÑADIR";
 
         return `
         <article class="${cardClass}" data-item-id="${item.id}" data-item-name="${item.name}">
@@ -349,7 +379,7 @@ function renderSimple(list, container, label, type) {
         const isOutOfStock = item.inStock === false;
         const cardClass = isOutOfStock ? "item-card is-out-of-stock" : "item-card";
         const stockBadge = isOutOfStock ? '<span class="stock-badge" aria-label="Sin stock">SIN STOCK</span>' : "";
-        const buttonLabel = isOutOfStock ? "SIN STOCK" : "ANADIR";
+        const buttonLabel = isOutOfStock ? "SIN STOCK" : "AÑADIR";
         return `
         <article class="${cardClass}" data-item-id="${item.id}" data-item-name="${item.name}">
             ${buildItemImageHTML(item)}
@@ -376,8 +406,7 @@ function renderCart() {
             const discountedSubtotal = (item.unitPrice - promoDisplay.discountAmount) * item.qty;
 
             const subtotalHTML = promoDisplay.hasDiscount
-                ? `<div style="text-decoration: line-through; color: #999; font-size: 0.8rem;">${formatMoney(originalSubtotal)}</div>
-                   <div>${formatMoney(discountedSubtotal)} <span style="background: #1f7a2e; color: #fff; font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; vertical-align: middle;">${promoDisplay.discountBadge}</span></div>`
+                ? `<div class="price-original">${formatMoney(originalSubtotal)}</div><div>${formatMoney(discountedSubtotal)} <span class="promo-badge promo-badge--sm">${promoDisplay.discountBadge}</span></div>`
                 : `${formatMoney(originalSubtotal)}`;
 
             const imageSrc = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
@@ -428,9 +457,9 @@ function addBurger(id) {
     setupCustomizerComboSection();
 
     burgerCustomizerInfo.innerHTML = `
-        <div style="margin-bottom: 16px;">
-            <h3 style="margin: 0 0 8px 0; color: var(--red); font-size: 1.2rem;">${baseItem.name}</h3>
-            <p style="margin: 0; color: #666; font-size: 0.9rem;">${baseItem.desc}</p>
+        <div class="customizer-item-info">
+            <h3>${baseItem.name}</h3>
+            <p>${baseItem.desc}</p>
         </div>
     `;
 
@@ -453,7 +482,7 @@ function updateCustomizerPrice() {
             const drink = drinkId ? menu.drinks.find((d) => d.id === drinkId) : null;
             const drinkLabel = drink ? ` + ${drink.name}` : "";
             const extrasNote = modifierCosts > 0
-                ? `<span style="display: block; font-size: 0.85rem; font-weight: 600; color: #666; margin-top: 4px;">Incluye personalización (+${formatMoney(modifierCosts)})</span>`
+                ? `<span class="modifier-price-note">Incluye personalización (+${formatMoney(modifierCosts)})</span>`
                 : "";
 
             burgerCustomizerPrice.innerHTML = `Combo${drinkLabel}: <span>${formatMoney(comboPrice)}</span>${extrasNote}`;
@@ -464,9 +493,7 @@ function updateCustomizerPrice() {
     const promoDisplay = getCustomizerPromoDisplay(currentBurgerToCustomize, normalPrice);
 
     if (promoDisplay.hasDiscount) {
-        burgerCustomizerPrice.innerHTML = `Precio: <span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(normalPrice)}</span>
-            <span>${formatMoney(promoDisplay.discountedPrice)}</span>
-            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${promoDisplay.discountBadge}</span>`;
+        burgerCustomizerPrice.innerHTML = `Precio: <span class="price-original">${formatMoney(normalPrice)}</span><span>${formatMoney(promoDisplay.discountedPrice)}</span><span class="promo-badge">${promoDisplay.discountBadge}</span>`;
     } else {
         burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
     }
@@ -544,6 +571,7 @@ function openBurgerCustomizer() {
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             burgerCustomizerModal.classList.add("is-open");
+            removeBurgerCustomizerTrap = trapFocus(burgerCustomizerModal);
         });
     });
 }
@@ -561,6 +589,7 @@ function closeBurgerCustomizer(options = {}) {
         window.history.replaceState(window.history.state, "", getLocationWithoutHash());
     }
 
+    if (removeBurgerCustomizerTrap) { removeBurgerCustomizerTrap(); removeBurgerCustomizerTrap = null; }
     burgerCustomizerModal.classList.remove("is-open");
     setTimeout(() => {
         burgerCustomizerModal.setAttribute("hidden", "");
@@ -698,7 +727,7 @@ function removeItem(key) {
 
 function clearCart() {
     if (cart.length === 0) return;
-
+    if (!confirm("¿Vaciar el carrito?")) return;
     cart = [];
     closeCartDrawer();
     persistAndRefresh("Carrito vaciado");
@@ -719,6 +748,8 @@ function renderMenuBadges() {
         const badgeSlot = card.querySelector(".cart-qty-badge-slot");
         if (badgeSlot) {
             badgeSlot.innerHTML = buildCartBadgeHTML(id, baseName);
+            const badge = badgeSlot.querySelector(".cart-qty-badge");
+            if (badge) requestAnimationFrame(() => badge.classList.add("badge-updated"));
         }
     });
 }
@@ -797,7 +828,7 @@ function renderCheckoutDetail(freeItems = []) {
     }).join("");
     
     if (freeItems && freeItems.length > 0) {
-        detailHTML += freeItems.map(fi => `<div class="checkout-detail-item" style="color: #1f7a2e; font-weight: bold; margin-top: 4px;">🎁 ${fi} - ¡GRATIS!</div>`).join("");
+        detailHTML += freeItems.map(fi => `<div class="checkout-detail-item checkout-detail-free">🎁 ${fi} - ¡GRATIS!</div>`).join("");
     }
     
     checkoutDetailList.innerHTML = detailHTML;
@@ -1144,12 +1175,12 @@ function updateDailyPromoBanner() {
         return;
     }
 
-    banner.textContent = bannerText;
+    const firstItemId = bannerPromos[0]?.itemIds?.[0];
+    const scrollBtn = firstItemId != null
+        ? ` <button class="promo-banner-link" data-scroll-to="${firstItemId}">Ver oferta →</button>`
+        : "";
+    banner.innerHTML = `${bannerText}${scrollBtn}`;
     banner.hidden = false;
-}
-
-function getDiscountInfo() {
-    return { amount: 0, reason: "" };
 }
 
 function calculateOrderSummary() {
@@ -1158,23 +1189,13 @@ function calculateOrderSummary() {
     const paymentMethod = paymentMethodSelect.value;
     
     const dailyPromo = getDailyPromoInfo(cart);
-
-    // Acumula descuentos (diarios + otros si aplica)
-    const subtotalForBaseDiscount = Math.max(0, subtotal - (dailyPromo.coveredSubtotal || 0));
-    const baseDiscountInfo = getDiscountInfo();
-
-    const totalDiscount = baseDiscountInfo.amount + dailyPromo.amount;
-    let reasons = [];
-    if (dailyPromo.reason) reasons.push(dailyPromo.reason);
-    if (baseDiscountInfo.reason) reasons.push(baseDiscountInfo.reason);
-    const combinedReason = reasons.join(" + ");
-
-    const total = Math.max(0, subtotal + shipping - totalDiscount);
+    const combinedReason = dailyPromo.reason || "";
+    const total = Math.max(0, subtotal + shipping - dailyPromo.amount);
 
     return {
         subtotal,
         shipping,
-        discount: totalDiscount,
+        discount: dailyPromo.amount,
         discountReason: combinedReason,
         paymentMethod,
         total,
@@ -1203,9 +1224,7 @@ function getItemPriceHTML(item) {
     const promoDisplay = getItemPromoDisplay(item);
 
     const priceContent = promoDisplay.hasDiscount
-        ? `<span style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-right: 8px;">${formatMoney(item.price)}</span>
-            <span>${formatMoney(promoDisplay.discountedPrice)}</span>
-            <span style="background: #1f7a2e; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block;">${promoDisplay.discountBadge}</span>`
+        ? `<span class="price-original">${formatMoney(item.price)}</span><span>${formatMoney(promoDisplay.discountedPrice)}</span><span class="promo-badge">${promoDisplay.discountBadge}</span>`
         : `<span>${formatMoney(item.price)}</span>`;
 
     return `<div class="price-tag">${priceContent}</div>`;
@@ -1318,11 +1337,13 @@ function openCheckout() {
             updateDeliveryModeUI();
             checkoutModal.classList.add("is-open");
             customerNameInput.focus();
+            removeCheckoutTrap = trapFocus(checkoutModal);
         });
     });
 }
 
 function closeCheckout() {
+    if (removeCheckoutTrap) { removeCheckoutTrap(); removeCheckoutTrap = null; }
     checkoutModal.classList.remove("is-open");
     checkoutModal.addEventListener("transitionend", () => {
         checkoutModal.setAttribute("hidden", "");
@@ -1535,8 +1556,6 @@ function hydrateCustomerData() {
 
         if (typeof data.streetNumber === "string") {
             customerStreetNumberInput.value = data.streetNumber;
-        } else if (typeof data.address === "string") {
-            customerStreetNumberInput.value = data.address;
         }
 
         if (typeof data.neighborhood === "string") {
@@ -1703,12 +1722,33 @@ function checkOpeningHours(openingHours) {
         bannerText.textContent = next
             ? `🔒 Estamos cerrados. Abrimos el ${next}.`
             : `🔒 Estamos cerrados por hoy.`;
-        banner.style.display = "block";
+        banner.removeAttribute('hidden');
         if (orderBtn) {
             orderBtn.dataset.closed = "true";
             orderBtn.setAttribute("aria-disabled", "true");
             orderBtn.title = "Estamos cerrados";
             orderBtn.dataset.nextOpen = next ? `Abrimos el ${next}` : "Cerrado por hoy";
         }
+    }
+
+    // Re-check exactly at the next open/close boundary (+1 min buffer)
+    const minutesUntilBoundary = (() => {
+        if (open) {
+            const todayHours = schedule[DAY_NAMES[dayIndex]];
+            const closeMin = parseTime(todayHours.close);
+            return (closeMin === 0 ? 24 * 60 : closeMin) - totalMinutes;
+        }
+        for (let i = 0; i <= 7; i++) {
+            const d = (dayIndex + i) % 7;
+            const hours = schedule[DAY_NAMES[d]];
+            if (!hours) continue;
+            const diff = i * 24 * 60 + parseTime(hours.open) - totalMinutes;
+            if (diff > 0) return diff;
+        }
+        return null;
+    })();
+
+    if (minutesUntilBoundary !== null && minutesUntilBoundary > 0) {
+        setTimeout(() => checkOpeningHours(openingHours), (minutesUntilBoundary + 1) * 60_000);
     }
 }

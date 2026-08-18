@@ -1,19 +1,6 @@
 {
     "promotions": [
         {
-            "id": "world-cup-2026-07-03",
-            "type": "bundle_fixed_price",
-            "dates": ["2026-07-03"],
-            "bundlePrice": 13000,
-            "burgerIds": "any",
-            "drinkIds": [10, 11, 13],
-            "modifiersChargedSeparately": true,
-            "customizerOffer": true,
-            "customizerLabel": "Combo Burger + Gaseosa — $13.000",
-            "banner": "🇦🇷 MUNDIAL: Burger + Gaseosa $13.000",
-            "reason": "Combo Burger + Gaseosa"
-        },
-        {
             "id": "friday-crispy",
             "type": "percent_off",
             "days": [5],
