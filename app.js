@@ -211,6 +211,7 @@ function onCheckoutBackdropClick(event) {
 
 function openLightbox(src) {
     const lb = document.getElementById("img-lightbox");
+    lb.classList.remove("is-closing");
     lb.querySelector("img").src = src;
     lb.hidden = false;
     document.body.style.overflow = "hidden";
@@ -218,9 +219,13 @@ function openLightbox(src) {
 
 function closeLightbox() {
     const lb = document.getElementById("img-lightbox");
-    lb.hidden = true;
-    lb.querySelector("img").src = "";
-    document.body.style.overflow = "";
+    lb.classList.add("is-closing");
+    lb.addEventListener("animationend", () => {
+        lb.hidden = true;
+        lb.classList.remove("is-closing");
+        lb.querySelector("img").src = "";
+        document.body.style.overflow = "";
+    }, { once: true });
 }
 
 function onDocumentClick(event) {
