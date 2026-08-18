@@ -316,11 +316,7 @@ function render() {
 function buildItemImageHTML(item) {
     const src = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
     const alt = `${item.name} - Chester Burger`;
-    const isJpeg = /\.(jpe?g)$/i.test(src);
-    const inner = isJpeg
-        ? `<picture><source type="image/webp" srcset="${src.replace(/\.(jpe?g)$/i, '.webp')}"><img src="${src}" alt="${alt}" loading="lazy" decoding="async"></picture>`
-        : `<img src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
-    return `<div class="item-img" data-lightbox-src="${src}" role="button" aria-label="Ver ${item.name}">${inner}</div>`;
+    return `<div class="item-img" data-lightbox-src="${src}" role="button" aria-label="Ver ${item.name}"><img src="${src}" alt="${alt}" loading="lazy" decoding="async"></div>`;
 }
 
 function renderBurgerOfMonth() {
