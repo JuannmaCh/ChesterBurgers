@@ -38,7 +38,7 @@
     <link rel="preload" as="image" href="assets/logo_chester.png">
     <link rel="preload" as="image" href="assets/burger_chester.jpeg">
 
-    <link rel="stylesheet" href="styles.css?v=1.4.5">
+    <link rel="stylesheet" href="styles.css?v=1.4.7">
     <!-- SEO:MENU_SCHEMA_START -->
 <script type="application/ld+json">
 {
@@ -61,44 +61,26 @@
     {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": "Sunday",
-      "opens": "00:00",
-      "closes": "23:59"
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": "Monday",
-      "opens": "00:00",
-      "closes": "23:59"
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": "Tuesday",
-      "opens": "00:00",
-      "closes": "23:59"
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": "Wednesday",
-      "opens": "00:00",
-      "closes": "23:59"
+      "opens": "20:30",
+      "closes": "23:00"
     },
     {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": "Thursday",
-      "opens": "00:00",
-      "closes": "23:59"
+      "opens": "20:30",
+      "closes": "23:00"
     },
     {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": "Friday",
-      "opens": "00:00",
-      "closes": "23:59"
+      "opens": "20:30",
+      "closes": "23:00"
     },
     {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": "Saturday",
-      "opens": "00:00",
-      "closes": "23:59"
+      "opens": "20:30",
+      "closes": "23:00"
     }
   ],
   "hasMenu": "https://chesterburger.com.ar/",
@@ -125,7 +107,7 @@
             "priceCurrency": "ARS",
             "availability": "https://schema.org/InStock"
           },
-          "description": "Doble medallon 125grs, cheddar, cebolla en cubos, pepinillo (opcional), mostaza y ketchup en pan de kalis"
+          "description": "Doble medallon 125grs, cheddar, cebolla en cubos, pepinillo, mostaza y ketchup en pan de kalis"
         }
       ]
     },
@@ -369,7 +351,7 @@
         <p>Pedí hamburguesas artesanales con delivery en Don Bosco, Quilmes, Avellaneda y zona sur. Take away en Chaco 150.</p>
     <h2>Burger del Mes</h2>
     <ul>
-        <li><strong>Cuarto de libra</strong> — Doble medallon 125grs, cheddar, cebolla en cubos, pepinillo (opcional), mostaza y ketchup en pan de kalis — $ 14.000</li>
+        <li><strong>Cuarto de libra</strong> — Doble medallon 125grs, cheddar, cebolla en cubos, pepinillo, mostaza y ketchup en pan de kalis — $ 14.000</li>
     </ul>
     <h2>Hamburguesas</h2>
     <ul>
@@ -568,6 +550,9 @@
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" id="customizer-pepino"> <span data-modifier-label="pepino">+ Pepinillo</span>
                     </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; display: none;">
+                        <input type="checkbox" id="customizer-sin-pepino"> <span data-modifier-label="sin_pepino">Sin pepinillo</span>
+                    </label>
                 </div>
             </div>
             <div id="customizer-combo-section" class="customizer-combo-section" hidden>
@@ -593,6 +578,6 @@
     <img src="" alt="Hamburguesa ampliada">
 </div>
 
-<script src="app.js?v=1.4.5"></script>
+<script src="app.js?v=1.4.7"></script>
 </body>
 </html>

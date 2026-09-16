@@ -21,10 +21,11 @@ const BURGER_MODIFIER_META = {
     cheddar: { inputId: "customizer-cheddar", displayLabel: "+ Cheddar", nameSuffix: " (+Cheddar)" },
     panceta: { inputId: "customizer-panceta", displayLabel: "+ Panceta", nameSuffix: " (+Panceta)" },
     huevo: { inputId: "customizer-huevo", displayLabel: "+ Huevo", nameSuffix: " (+Huevo)" },
-    pepino: { inputId: "customizer-pepino", displayLabel: "+ Pepinillo", nameSuffix: " (+Pepinillo)" }
+    pepino: { inputId: "customizer-pepino", displayLabel: "+ Pepinillo", nameSuffix: " (+Pepinillo)" },
+    sin_pepino: { inputId: "customizer-sin-pepino", displayLabel: "Sin pepinillo", nameSuffix: " (Sin Pepinillo)" }
 };
 
-const BURGER_MODIFIER_ORDER = ["notco", "triple", "cheddar", "panceta", "huevo", "pepino"];
+const BURGER_MODIFIER_ORDER = ["notco", "triple", "cheddar", "panceta", "huevo", "pepino", "sin_pepino"];
 const STREET_AND_NUMBER_REGEX = /^(?=.*[A-Za-z\u00C0-\u024F])(?=.*\d)[A-Za-z\u00C0-\u024F\d\s.,'#\-/]+$/;
 
 const PAYMENT_METHOD_LABELS = {
@@ -90,10 +91,10 @@ let lightboxTriggerElement = null;
 async function init() {
     try {
         const [menuData, configData, shippingData, promotionsData] = await Promise.all([
-            fetch("data/menu.json?v=1.4.5").then(r => r.json()),
-            fetch("data/config.json?v=1.4.5").then(r => r.json()),
-            fetch("data/shipping.json?v=1.4.5").then(r => r.json()),
-            fetch("data/promotions.json?v=1.4.5").then(r => r.json())
+            fetch("data/menu.json?v=1.4.7").then(r => r.json()),
+            fetch("data/config.json?v=1.4.7").then(r => r.json()),
+            fetch("data/shipping.json?v=1.4.7").then(r => r.json()),
+            fetch("data/promotions.json?v=1.4.7").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -140,6 +141,7 @@ function bindEvents() {
     document.getElementById("customizer-panceta").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-huevo").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-pepino").addEventListener("change", updateCustomizerPrice);
+    document.getElementById("customizer-sin-pepino").addEventListener("change", updateCustomizerPrice);
     document.getElementById("customizer-combo-enable")?.addEventListener("change", onCustomizerComboChange);
     document.getElementById("customizer-combo-drink-options")?.addEventListener("change", updateCustomizerPrice);
     window.addEventListener("popstate", onWindowPopstate);
@@ -442,6 +444,12 @@ function addBurger(id) {
     }
 
     currentBurgerToCustomize = baseItem;
+
+    const hasPepinilloDefault = (id === 18 || id === 7);
+    const pepinoContainer = document.getElementById("customizer-pepino")?.closest('label');
+    const sinPepinoContainer = document.getElementById("customizer-sin-pepino")?.closest('label');
+    if (pepinoContainer) pepinoContainer.style.display = hasPepinilloDefault ? 'none' : 'flex';
+    if (sinPepinoContainer) sinPepinoContainer.style.display = hasPepinilloDefault ? 'flex' : 'none';
 
     BURGER_MODIFIER_ORDER.forEach((modifierKey) => {
         const checkbox = getModifierCheckbox(modifierKey);
@@ -1641,9 +1649,6 @@ function getSelectedBurgerModifiers() {
 function calculateCustomizedBurgerPrice(basePrice, modifiers) {
     return modifiers.reduce((acc, modifierKey) => {
         let price = CONFIG_PRICES.modifiers[modifierKey] || 0;
-        if (modifierKey === 'pepino' && currentBurgerToCustomize && currentBurgerToCustomize.id === 18) {
-            price = 0;
-        }
         return acc + price;
     }, basePrice);
 }
@@ -1661,14 +1666,11 @@ function refreshCustomizerOptionLabels() {
         if (!label) return;
 
         let price = CONFIG_PRICES.modifiers[modifierKey] || 0;
-        if (modifierKey === 'pepino' && currentBurgerToCustomize && currentBurgerToCustomize.id === 18) {
-            price = 0;
-        }
 
         const baseLabel = BURGER_MODIFIER_META[modifierKey]?.displayLabel || modifierKey;
         label.textContent = price > 0
             ? `${baseLabel} (+${formatMoney(price)})`
-            : (modifierKey === 'pepino' && currentBurgerToCustomize && currentBurgerToCustomize.id === 18 ? `${baseLabel} (¡Gratis!)` : baseLabel);
+            : baseLabel;
     });
 }
 function checkOpeningHours(openingHours) {
