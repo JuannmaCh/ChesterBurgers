@@ -15,13 +15,13 @@
     "openingHours": {
         "timezone": "America/Argentina/Buenos_Aires",
         "schedule": {
-            "sunday":    { "open": "00:00", "close": "23:59" },
-            "monday":    { "open": "00:00", "close": "23:59" },
-            "tuesday":   { "open": "00:00", "close": "23:59" },
-            "wednesday": { "open": "00:00", "close": "23:59" },
-            "thursday":  { "open": "00:00", "close": "23:59" },
-            "friday":    { "open": "00:00", "close": "23:59" },
-            "saturday":  { "open": "00:00", "close": "23:59" }
+            "sunday":    { "open": "20:30", "close": "23:00" },
+            "monday":    null,
+            "tuesday":   null,
+            "wednesday": null,
+            "thursday":  { "open": "20:30", "close": "23:00" },
+            "friday":    { "open": "20:30", "close": "23:00" },
+            "saturday":  { "open": "20:30", "close": "23:00" }
         }
     }
 }
