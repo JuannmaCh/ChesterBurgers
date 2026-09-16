@@ -90,10 +90,10 @@ let lightboxTriggerElement = null;
 async function init() {
     try {
         const [menuData, configData, shippingData, promotionsData] = await Promise.all([
-            fetch("data/menu.json?v=1.4.1").then(r => r.json()),
-            fetch("data/config.json?v=1.4.1").then(r => r.json()),
-            fetch("data/shipping.json?v=1.4.1").then(r => r.json()),
-            fetch("data/promotions.json?v=1.4.1").then(r => r.json())
+            fetch("data/menu.json?v=1.4.3").then(r => r.json()),
+            fetch("data/config.json?v=1.4.3").then(r => r.json()),
+            fetch("data/shipping.json?v=1.4.3").then(r => r.json()),
+            fetch("data/promotions.json?v=1.4.3").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -1640,7 +1640,11 @@ function getSelectedBurgerModifiers() {
 
 function calculateCustomizedBurgerPrice(basePrice, modifiers) {
     return modifiers.reduce((acc, modifierKey) => {
-        return acc + (CONFIG_PRICES.modifiers[modifierKey] || 0);
+        let price = CONFIG_PRICES.modifiers[modifierKey] || 0;
+        if (modifierKey === 'pepino' && currentBurgerToCustomize && currentBurgerToCustomize.id === 18) {
+            price = 0;
+        }
+        return acc + price;
     }, basePrice);
 }
 
@@ -1656,7 +1660,11 @@ function refreshCustomizerOptionLabels() {
         const label = document.querySelector(`[data-modifier-label="${modifierKey}"]`);
         if (!label) return;
 
-        const price = CONFIG_PRICES.modifiers[modifierKey] || 0;
+        let price = CONFIG_PRICES.modifiers[modifierKey] || 0;
+        if (modifierKey === 'pepino' && currentBurgerToCustomize && currentBurgerToCustomize.id === 18) {
+            price = 0;
+        }
+
         const baseLabel = BURGER_MODIFIER_META[modifierKey]?.displayLabel || modifierKey;
         label.textContent = price > 0
             ? `${baseLabel} (+${formatMoney(price)})`

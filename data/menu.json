@@ -1,15 +1,16 @@
 {
     "burgerOfMonth": [
         {
-            "id": 14,
-            "name": "La Vek",
+            "id": 18,
+            "name": "Cuarto de libra",
             "price": 14000,
-            "desc": "Doble medallon 100grs, cheddar, cebolla caramelizada, panceta, alioli y barbacoa con pan de kalis",
+            "desc": "Doble medallon 125grs, cheddar, cebolla en cubos, mostaza y ketchup en pan de kalis",
             "image": "assets/burger_vek.JPG",
             "inStock": true
         }
     ],
     "burgers": [
+        { "id": 14, "name": "La Vek", "price": 14000, "desc": "Doble medallon 100grs, cheddar, cebolla caramelizada, panceta, alioli y barbacoa con pan de kalis", "image": "assets/burger_vek.JPG", "inStock": true },
         { "id": 1, "name": "Cheese", "price": 12800, "desc": "Doble medallon 100grs y doble cheddar con pan de kalis", "image": "assets/burger_cheese.JPG", "inStock": true },
         { "id": 2, "name": "Cheese & Bacon", "price": 13800, "desc": "Doble medallon 100grs, cheddar y panceta con pan de kalis", "image": "assets/burger_cheesebacon.JPG", "inStock": true },
         { "id": 3, "name": "Egg & Bacon", "price": 14000, "desc": "Doble medallon 100grs, cheddar, huevo y panceta con pan de kalis", "image": "assets/burger_eggbacon.JPG", "inStock": true },
