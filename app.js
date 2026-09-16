@@ -21,7 +21,7 @@ const BURGER_MODIFIER_META = {
     cheddar: { inputId: "customizer-cheddar", displayLabel: "+ Cheddar", nameSuffix: " (+Cheddar)" },
     panceta: { inputId: "customizer-panceta", displayLabel: "+ Panceta", nameSuffix: " (+Panceta)" },
     huevo: { inputId: "customizer-huevo", displayLabel: "+ Huevo", nameSuffix: " (+Huevo)" },
-    pepino: { inputId: "customizer-pepino", displayLabel: "+ Pepino", nameSuffix: " (+Pepino)" }
+    pepino: { inputId: "customizer-pepino", displayLabel: "+ Pepinillo", nameSuffix: " (+Pepinillo)" }
 };
 
 const BURGER_MODIFIER_ORDER = ["notco", "triple", "cheddar", "panceta", "huevo", "pepino"];
@@ -90,10 +90,10 @@ let lightboxTriggerElement = null;
 async function init() {
     try {
         const [menuData, configData, shippingData, promotionsData] = await Promise.all([
-            fetch("data/menu.json?v=1.4.3").then(r => r.json()),
-            fetch("data/config.json?v=1.4.3").then(r => r.json()),
-            fetch("data/shipping.json?v=1.4.3").then(r => r.json()),
-            fetch("data/promotions.json?v=1.4.3").then(r => r.json())
+            fetch("data/menu.json?v=1.4.4").then(r => r.json()),
+            fetch("data/config.json?v=1.4.4").then(r => r.json()),
+            fetch("data/shipping.json?v=1.4.4").then(r => r.json()),
+            fetch("data/promotions.json?v=1.4.4").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -1668,7 +1668,7 @@ function refreshCustomizerOptionLabels() {
         const baseLabel = BURGER_MODIFIER_META[modifierKey]?.displayLabel || modifierKey;
         label.textContent = price > 0
             ? `${baseLabel} (+${formatMoney(price)})`
-            : baseLabel;
+            : (modifierKey === 'pepino' && currentBurgerToCustomize && currentBurgerToCustomize.id === 18 ? `${baseLabel} (¡Gratis!)` : baseLabel);
     });
 }
 function checkOpeningHours(openingHours) {
