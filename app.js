@@ -91,10 +91,10 @@ let lightboxTriggerElement = null;
 async function init() {
     try {
         const [menuData, configData, shippingData, promotionsData] = await Promise.all([
-            fetch("data/menu.json?v=1.4.10").then(r => r.json()),
-            fetch("data/config.json?v=1.4.10").then(r => r.json()),
-            fetch("data/shipping.json?v=1.4.10").then(r => r.json()),
-            fetch("data/promotions.json?v=1.4.10").then(r => r.json())
+            fetch("data/menu.json?v=1.4.11").then(r => r.json()),
+            fetch("data/config.json?v=1.4.11").then(r => r.json()),
+            fetch("data/shipping.json?v=1.4.11").then(r => r.json()),
+            fetch("data/promotions.json?v=1.4.11").then(r => r.json())
         ]);
 
         menu = menuData;
@@ -402,8 +402,9 @@ function renderCart() {
             const originalSubtotal = item.unitPrice * item.qty;
             const discountedSubtotal = (item.unitPrice - promoDisplay.discountAmount) * item.qty;
 
+            const badgeHTML = promoDisplay.discountBadge ? ` <span class="promo-badge promo-badge--sm">${promoDisplay.discountBadge}</span>` : "";
             const subtotalHTML = promoDisplay.hasDiscount
-                ? `<div class="price-original">${formatMoney(originalSubtotal)}</div><div>${formatMoney(discountedSubtotal)} <span class="promo-badge promo-badge--sm">${promoDisplay.discountBadge}</span></div>`
+                ? `<div class="price-original">${formatMoney(originalSubtotal)}</div><div>${formatMoney(discountedSubtotal)}${badgeHTML}</div>`
                 : `${formatMoney(originalSubtotal)}`;
 
             const imageSrc = resolveAssetPath(item.image || DEFAULT_ITEM_IMAGE);
@@ -496,7 +497,8 @@ function updateCustomizerPrice() {
     const promoDisplay = getCustomizerPromoDisplay(currentBurgerToCustomize, normalPrice);
 
     if (promoDisplay.hasDiscount) {
-        burgerCustomizerPrice.innerHTML = `Precio: <span class="price-original">${formatMoney(normalPrice)}</span><span>${formatMoney(promoDisplay.discountedPrice)}</span><span class="promo-badge">${promoDisplay.discountBadge}</span>`;
+        const badgeHTML = promoDisplay.discountBadge ? `<span class="promo-badge">${promoDisplay.discountBadge}</span>` : "";
+        burgerCustomizerPrice.innerHTML = `Precio: <span class="price-original">${formatMoney(normalPrice)}</span><span>${formatMoney(promoDisplay.discountedPrice)}</span>${badgeHTML}`;
     } else {
         burgerCustomizerPrice.innerHTML = `Precio: <span>${formatMoney(normalPrice)}</span>`;
     }
@@ -963,7 +965,7 @@ function getPercentOffForItem(item, activePromos) {
         if (!best || discountAmount > best.discountAmount) {
             best = {
                 discountAmount,
-                badge: `${promo.percent}% OFF`,
+                badge: promo.badge !== undefined ? promo.badge : `${promo.percent}% OFF`,
                 reason: promo.reason
             };
         }
@@ -1226,8 +1228,9 @@ function createComboCartKey(baseId, modifiers, drinkId) {
 function getItemPriceHTML(item) {
     const promoDisplay = getItemPromoDisplay(item);
 
+    const badgeHTML = promoDisplay.discountBadge ? `<span class="promo-badge">${promoDisplay.discountBadge}</span>` : "";
     const priceContent = promoDisplay.hasDiscount
-        ? `<span class="price-original">${formatMoney(item.price)}</span><span>${formatMoney(promoDisplay.discountedPrice)}</span><span class="promo-badge">${promoDisplay.discountBadge}</span>`
+        ? `<span class="price-original">${formatMoney(item.price)}</span><span>${formatMoney(promoDisplay.discountedPrice)}</span>${badgeHTML}`
         : `<span>${formatMoney(item.price)}</span>`;
 
     return `<div class="price-tag">${priceContent}</div>`;
